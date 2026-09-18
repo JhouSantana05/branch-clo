@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paleta Suave: Tons de Palha, Linho Cru, Areia e Café Quente */
+    --background: 38 30% 97%;       /* #FAF7F2 - Linho Cru / Palha Suave */
+    --foreground: 28 18% 16%;       /* #2E2620 - Espresso Quente / Grafite Orgânico */
+
+    --card: 40 33% 99%;             /* #FDFCF9 - Areia Branca Luminosa */
+    --card-foreground: 28 18% 16%;
+
+    --popover: 40 33% 99%;
+    --popover-foreground: 28 18% 16%;
+
+    --primary: 28 22% 18%;          /* #382B22 - Terracota Escura / Marrom Café */
+    --primary-foreground: 38 40% 97%;
+
+    --secondary: 36 28% 92%;        /* #EFE8DC - Palha Natural / Linho Médio */
+    --secondary-foreground: 28 22% 20%;
+
+    --muted: 36 24% 93%;            /* #F2EDE4 - Areia Clara */
+    --muted-foreground: 30 10% 48%; /* #827870 - Argila / Taupe Suave */
+
+    --accent: 38 35% 88%;           /* #E7DDD0 - Dourado Pálido / Trigo */
+    --accent-foreground: 28 22% 18%;
+
+    --destructive: 0 50% 55%;
+    --destructive-foreground: 38 40% 98%;
+
+    --border: 36 20% 88%;           /* #E5DDD0 - Linhas suaves de linho */
+    --input: 36 20% 88%;
+    --ring: 28 20% 30%;
+
+    --radius: 2px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-stone-300 selection:text-stone-900;
+    background-color: #FAF7F2;
+    color: #2E2620;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Utilitários com textura e suavidade */
+.bg-palha {
+  background-color: #F5EFE6;
+}
+
+.bg-linho {
+  background-color: #FAF7F2;
+}
+
+.bg-areia {
+  background-color: #ECE5DA;
+}
+
+.border-palha {
+  border-color: #E2D7C7;
+}
+
+.text-argila {
+  color: #7E7265;
+}
