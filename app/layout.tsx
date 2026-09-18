@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -15,9 +17,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BRANCH CLO | Vestuário com Propósito & Essência",
+  title: "BRANCH CLO. | Mais que roupa. Um lembrete diário.",
   description:
-    "Marca de vestuário streetwear contemporâneo com propósito. Modelagens heavyweight em algodão puro e tons naturais.",
+    "The Vine Collection. Moda cristã autoral em Suedine Premium 205g 100% algodão. Linhas Adulto, Teens, Kids e Acessórios.",
   icons: {
     icon: "/brand/logo.svg",
   },
@@ -31,9 +33,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="scroll-smooth">
       <body
-        className={`${inter.variable} ${spaceMono.variable} min-h-screen bg-background text-foreground flex flex-col font-sans`}
+        className={`${inter.variable} ${spaceMono.variable} min-h-screen bg-[#FAF7F2] text-[#2E2620] flex flex-col font-sans antialiased`}
       >
-        {children}
+        <Header />
+        <div className="flex-1 flex flex-col">{children}</div>
+        <Footer />
         <Toaster position="bottom-right" richColors />
       </body>
     </html>
