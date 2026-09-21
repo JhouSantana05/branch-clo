@@ -28,9 +28,16 @@ import {
   ImageIcon,
   Camera,
   Trash2,
+  Lock,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export function AdminProductsView() {
+  const { admin, isAdminAuthenticated, loginAdmin, logoutAdmin } = useAuth();
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+
   const [products, setProducts] = useState<ProductData[]>(OFFICIAL_PRODUCTS);
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -43,9 +50,16 @@ export function AdminProductsView() {
   const [newCategory, setNewCategory] = useState("Linha Adulto");
   const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("");
-  const [newImageUrl, setNewImageUrl] = useState<string>("");
-  const [imageFileName, setImageFileName] = useState<string>("");
+  
+  // Up to 3 photos: [Foto 1 - Principal, Foto 2 - Costas, Foto 3 - Detalhes]
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [targetSlot, setTargetSlot] = useState<number>(0);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleTriggerUpload = (slotIndex: number) => {
+    setTargetSlot(slotIndex);
+    fileInputRef.current?.click();
+  };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,15 +70,29 @@ export function AdminProductsView() {
       return;
     }
 
-    setImageFileName(file.name);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setNewImageUrl(reader.result);
-        toast.success("Foto da peça carregada com sucesso!");
+        const resultUrl = reader.result;
+        setPhotos((prev) => {
+          const next = [...prev];
+          if (targetSlot < next.length) {
+            next[targetSlot] = resultUrl;
+          } else {
+            next.push(resultUrl);
+          }
+          return next.slice(0, 3);
+        });
+        toast.success(`Foto ${targetSlot + 1} carregada com sucesso!`);
       }
     };
     reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, idx) => idx !== index));
+    toast.info(`Foto ${index + 1} removida.`);
   };
 
   // Ajuste de Estoque
@@ -146,8 +174,7 @@ export function AdminProductsView() {
     setNewCategory("Linha Adulto");
     setNewPrice("");
     setNewStock("");
-    setNewImageUrl("");
-    setImageFileName("");
+    setPhotos([]);
     setShowAddModal(true);
   };
 
@@ -159,8 +186,7 @@ export function AdminProductsView() {
     setNewPrice(basePrice.toString());
     const firstStock = product.variants[0]?.stockAvailable ?? 10;
     setNewStock(firstStock.toString());
-    setNewImageUrl(product.images[0]?.url || "");
-    setImageFileName("");
+    setPhotos(product.images.map((img) => img.url).slice(0, 3));
     setShowAddModal(true);
   };
 
@@ -178,7 +204,14 @@ export function AdminProductsView() {
     const parsedPrice = parseFloat(newPrice.replace(",", ".")) || 129.9;
     const parsedStock = parseInt(newStock) || 10;
     const slug = newName.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
-    const finalImageUrl = newImageUrl || "/catalog/tee-oversized-offwhite-frente.jpeg";
+    const activePhotos = photos.length > 0 ? photos : ["/catalog/tee-oversized-offwhite-frente.jpeg"];
+    const formattedImages = activePhotos.map((url, idx) => ({
+      id: `img-${Date.now()}-${idx}`,
+      url,
+      altText: `${newName} - Foto ${idx + 1}`,
+      isMain: idx === 0,
+      displayOrder: idx + 1,
+    }));
 
     if (editingProductId) {
       // Atualizar peça existente
@@ -190,16 +223,7 @@ export function AdminProductsView() {
             name: newName,
             slug: slug,
             categoryName: newCategory,
-            images: [
-              {
-                id: prod.images[0]?.id || `img-${Date.now()}`,
-                url: finalImageUrl,
-                altText: newName,
-                isMain: true,
-                displayOrder: 1,
-              },
-              ...prod.images.slice(1),
-            ],
+            images: formattedImages,
             variants: prod.variants.map((v) => ({
               ...v,
               regularPrice: parsedPrice,
@@ -218,15 +242,7 @@ export function AdminProductsView() {
         categoryName: newCategory,
         description: "Nova peça da coleção autoral Branch Clo em Suedine 205g.",
         fabricComposition: "Suedine Premium 205g 100% Algodão",
-        images: [
-          {
-            id: `img-${Date.now()}`,
-            url: finalImageUrl,
-            altText: newName,
-            isMain: true,
-            displayOrder: 1,
-          },
-        ],
+        images: formattedImages,
         variants: [
           {
             id: `var-p-${Date.now()}`,
@@ -279,9 +295,82 @@ export function AdminProductsView() {
     setNewName("");
     setNewPrice("");
     setNewStock("");
-    setNewImageUrl("");
-    setImageFileName("");
+    setPhotos([]);
   };
+
+  // Se não estiver autenticado como administrador, bloqueia e exibe formulário
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="w-full max-w-md mx-auto px-4 py-16 text-center font-sans">
+        <div className="bg-white border border-[#E8E1D5] rounded-2xl p-8 shadow-sm">
+          <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-7 h-7" />
+          </div>
+          <span className="text-[11px] font-mono uppercase tracking-widest text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded">
+            Acesso Restrito
+          </span>
+          <h2 className="text-2xl font-serif font-bold text-[#2E2620] mt-3">
+            Gestão de Produtos
+          </h2>
+          <p className="text-xs text-stone-600 mt-1 mb-6">
+            Identifique-se como lojista para gerenciar o estoque, cadastrar novas peças e definir valores.
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const ok = loginAdmin(adminEmail, adminPassword);
+              if (ok) toast.success("Acesso ao inventário autorizado!");
+              else toast.error("Credenciais inválidas.");
+            }}
+            className="space-y-3 text-xs font-mono text-left"
+          >
+            <div>
+              <label className="block text-stone-700 mb-1">E-MAIL DO ADMINISTRADOR *</label>
+              <input
+                type="text"
+                required
+                placeholder="admin@branchclo.com.br"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#E8E1D5] rounded-lg focus:outline-none focus:border-[#1E3524]"
+              />
+            </div>
+            <div>
+              <label className="block text-stone-700 mb-1">SENHA *</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#E8E1D5] rounded-lg focus:outline-none focus:border-[#1E3524]"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-[#1E3524] hover:bg-[#152519] text-white py-2.5 h-auto font-mono text-xs uppercase"
+            >
+              Acessar Estoque
+            </Button>
+          </form>
+
+          <div className="mt-4 pt-4 border-t border-[#E8E1D5] text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setAdminEmail("admin@branchclo.com.br");
+                setAdminPassword("branch2026");
+              }}
+              className="text-[11px] text-[#1E3524] underline"
+            >
+              Preenchimento rápido: admin@branchclo.com.br
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 font-sans">
@@ -302,10 +391,15 @@ export function AdminProductsView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link href="/admin/pedidos">
             <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6] text-xs font-mono">
               Ver Pedidos Realizados
+            </Button>
+          </Link>
+          <Link href="/">
+            <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6] text-xs font-mono">
+              Loja Online
             </Button>
           </Link>
           <Button
@@ -315,6 +409,19 @@ export function AdminProductsView() {
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Cadastrar Peça</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              logoutAdmin();
+              toast.info("Sessão administrativa encerrada.");
+            }}
+            className="text-stone-500 hover:text-red-600 text-xs font-mono flex items-center gap-1 h-9 px-2.5"
+            title="Encerrar Sessão"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Sair</span>
           </Button>
         </div>
       </div>
@@ -620,11 +727,20 @@ export function AdminProductsView() {
                 </div>
               </div>
 
-              {/* FOTO DA PEÇA */}
+              {/* FOTOS DA PEÇA (ATÉ 3 FOTOS) */}
               <div>
-                <label className="block text-stone-700 mb-1">
-                  FOTO DA PEÇA *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-stone-700 font-bold">
+                    FOTOS DA PEÇA (MÁXIMO DE 3 FOTOS) *
+                  </label>
+                  <span className="text-[10px] text-stone-500 font-mono">
+                    {photos.length} de 3 fotos adicionadas
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-500 mb-3">
+                  Adicione fotos da frente, das costas e detalhes da costura/tecido (Suedine 205g).
+                </p>
+
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -633,86 +749,110 @@ export function AdminProductsView() {
                   className="hidden"
                 />
 
-                <div className="bg-white border border-[#E8E1D5] rounded-lg p-3.5 flex flex-col sm:flex-row items-center gap-4">
-                  {/* Thumbnail Preview */}
-                  <div className="relative w-20 h-24 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shrink-0 flex items-center justify-center">
-                    {newImageUrl ? (
-                      <Image
-                        src={newImageUrl}
-                        alt="Prévia da peça"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-stone-400 p-2 text-center">
-                        <Camera className="w-6 h-6 mb-1 text-stone-400" />
-                        <span className="text-[9px] leading-tight font-mono">Sem foto</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions & Preset Buttons */}
-                  <div className="flex-1 space-y-2 text-center sm:text-left">
-                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-[#1E3524] hover:bg-[#152519] text-white text-[11px] font-mono h-8 flex items-center gap-1.5"
+                {/* Grid dos 3 Slots de Fotos */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { label: "Foto 1 (Principal/Capa)", sub: "Visão frontal" },
+                    { label: "Foto 2 (Costas/Verso)", sub: "Visão traseira" },
+                    { label: "Foto 3 (Detalhes)", sub: "Gola e costura" },
+                  ].map((slotInfo, idx) => {
+                    const slotPhoto = photos[idx];
+                    return (
+                      <div
+                        key={idx}
+                        className={`rounded-lg border p-2.5 flex flex-col items-center justify-between transition-all ${
+                          slotPhoto
+                            ? "border-[#1E3524]/30 bg-stone-50"
+                            : "border-dashed border-stone-300 bg-[#FAF7F2]/50 hover:border-stone-400"
+                        }`}
                       >
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>{imageFileName ? "Trocar Foto" : "Fazer Upload de Foto"}</span>
-                      </Button>
+                        <div className="w-full flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-mono font-semibold text-[#2E2620]">
+                            {slotInfo.label}
+                          </span>
+                          {idx === 0 && (
+                            <span className="text-[8px] uppercase tracking-wider bg-[#1E3524] text-white px-1.5 py-0.2 rounded font-mono">
+                              Capa
+                            </span>
+                          )}
+                        </div>
 
-                      {imageFileName && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImageFileName("");
-                            setNewImageUrl("/catalog/tee-oversized-offwhite-frente.jpeg");
-                          }}
-                          className="text-[10px] text-red-600 hover:underline font-mono"
-                        >
-                          Restaurar Padrão
-                        </button>
-                      )}
-                    </div>
+                        {/* Área do Thumbnail */}
+                        <div className="relative w-full h-28 rounded-md overflow-hidden bg-white border border-stone-200 flex items-center justify-center mb-2">
+                          {slotPhoto ? (
+                            <Image
+                              src={slotPhoto}
+                              alt={slotInfo.label}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-stone-400 p-2 text-center">
+                              <Camera className="w-6 h-6 mb-1 text-stone-300" />
+                              <span className="text-[9px] font-mono text-stone-400">{slotInfo.sub}</span>
+                            </div>
+                          )}
+                        </div>
 
-                    {imageFileName ? (
-                      <p className="text-[10px] text-emerald-800 font-mono truncate max-w-xs">
-                        Arquivo carregado: {imageFileName}
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-stone-500 font-mono">
-                        Ou escolha um modelo rápido da galeria:
-                      </p>
-                    )}
+                        {/* Ações do Slot */}
+                        <div className="w-full flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleTriggerUpload(idx)}
+                            className="flex-1 bg-[#1E3524] hover:bg-[#152519] text-white text-[10px] font-mono h-7 flex items-center justify-center gap-1"
+                          >
+                            <Upload className="w-3 h-3" />
+                            <span>{slotPhoto ? "Trocar" : "+ Foto"}</span>
+                          </Button>
 
-                    {/* Presets rápidos */}
-                    <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
-                      {[
-                        { label: "Off-White", url: "/catalog/tee-oversized-offwhite-frente.jpeg" },
-                        { label: "Preto", url: "/catalog/tee-oversized-preto-frente.jpeg" },
-                        { label: "Marrom", url: "/catalog/hoodie-boxy-marrom-frente.jpeg" },
-                        { label: "Couro", url: "/catalog/detalhes-costura.jpeg" },
-                      ].map((preset) => (
-                        <button
-                          key={preset.label}
-                          type="button"
-                          onClick={() => {
-                            setNewImageUrl(preset.url);
-                            setImageFileName("");
-                          }}
-                          className={`text-[10px] px-2 py-0.5 rounded border font-mono transition-colors ${
-                            newImageUrl === preset.url && !imageFileName
-                              ? "bg-[#2E2620] text-white border-[#2E2620]"
-                              : "bg-[#FAF7F2] text-stone-600 border-stone-200 hover:border-stone-400"
-                          }`}
-                        >
-                          {preset.label}
-                        </button>
-                      ))}
-                    </div>
+                          {slotPhoto && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePhoto(idx)}
+                              className="h-7 w-7 rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors"
+                              title="Remover foto"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Presets Rápidos para facilitar testes */}
+                <div className="mt-3 pt-2.5 border-t border-stone-200">
+                  <span className="text-[10px] font-mono text-stone-500 block mb-1.5">
+                    Ou adicione fotos rápidas do acervo oficial:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: "+ Off-White (Frente)", url: "/catalog/tee-oversized-offwhite-frente.jpeg" },
+                      { label: "+ Off-White (Costas)", url: "/catalog/tee-oversized-offwhite-costas.jpeg" },
+                      { label: "+ Preto (Frente)", url: "/catalog/tee-oversized-preto-frente.jpeg" },
+                      { label: "+ Preto (Costas)", url: "/catalog/tee-oversized-preto-costas.jpeg" },
+                      { label: "+ Marrom Boxy", url: "/catalog/hoodie-boxy-marrom-frente.jpeg" },
+                      { label: "+ Detalhe Costura", url: "/catalog/detalhes-costura.jpeg" },
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setPhotos((prev) => {
+                            if (prev.length < 3) return [...prev, preset.url];
+                            const updated = [...prev];
+                            updated[0] = preset.url;
+                            return updated;
+                          });
+                          toast.success(`Foto "${preset.label}" adicionada!`);
+                        }}
+                        className="text-[10px] px-2 py-0.5 rounded border border-stone-200 bg-white hover:bg-stone-100 text-stone-700 font-mono transition-colors"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>

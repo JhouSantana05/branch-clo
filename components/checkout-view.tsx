@@ -21,7 +21,14 @@ import {
   CreditCard,
   Tag,
   X,
+  User,
+  Lock,
+  UserPlus,
+  LogIn,
+  LogOut,
+  AlertCircle,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export function CheckoutView() {
   const searchParams = useSearchParams();
@@ -58,11 +65,61 @@ export function CheckoutView() {
   const [shippingMethod, setShippingMethod] = useState<"PAC" | "SEDEX">("PAC");
   const [paymentMethod, setPaymentMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
 
-  // Dados do Cliente
+  // Autenticação Obrigatória para Compras
+  const { customer, isCustomerAuthenticated, loginCustomer, registerCustomer, logoutCustomer } = useAuth();
+  const [authTab, setAuthTab] = useState<"login" | "register">("login");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regCpf, setRegCpf] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+
+  // Dados do Cliente (Preenchidos automaticamente se autenticado)
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerCpf, setCustomerCpf] = useState("");
+
+  // Sincronizar dados do cliente logado
+  useEffect(() => {
+    if (customer) {
+      setCustomerName(customer.name);
+      setCustomerEmail(customer.email);
+      setCustomerPhone(customer.phone);
+      setCustomerCpf(customer.cpf);
+    }
+  }, [customer]);
+
+  const handleInlineLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      toast.error("Preencha e-mail e senha.");
+      return;
+    }
+    const ok = loginCustomer(loginEmail, loginPassword);
+    if (ok) {
+      toast.success("Login realizado com sucesso!");
+    } else {
+      toast.error("Falha ao autenticar. Tente novamente.");
+    }
+  };
+
+  const handleInlineRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regEmail.trim() || !regPhone.trim()) {
+      toast.error("Por favor, preencha os campos obrigatórios.");
+      return;
+    }
+    const ok = registerCustomer(regName, regEmail, regPhone, regCpf, regPassword);
+    if (ok) {
+      toast.success("Conta criada com sucesso! Você já está autenticado para comprar.");
+    } else {
+      toast.error("Falha ao registrar conta.");
+    }
+  };
 
   // Endereço
   const [cep, setCep] = useState("");
@@ -159,6 +216,15 @@ export function CheckoutView() {
   // Submeter Pedido
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isCustomerAuthenticated) {
+      toast.error("Identificação Obrigatória", {
+        description: "Você precisa estar cadastrado e conectado para concluir a compra. Faça login ou cadastre-se na Etapa 1.",
+      });
+      const el = document.getElementById("etapa-identificacao");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
 
     if (!customerName || !customerPhone || !street || !number) {
       toast.error("Por favor, preencha os campos obrigatórios de entrega");
@@ -363,63 +429,260 @@ export function CheckoutView() {
           {/* COLUNA ESQUERDA: DADOS DE ENVIO & PAGAMENTO (7 colunas) */}
           <div className="lg:col-span-7 space-y-8">
             
-            {/* 1. DADOS PESSOAIS */}
-            <div className="bg-[#FDFCF9] border border-stone-200 p-6 rounded-sm shadow-xs">
-              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#8C7A68] block mb-1">
-                ETAPA 1 DE 3
-              </span>
-              <h2 className="text-base font-bold uppercase tracking-wide text-[#2E2620] mb-4">
-                Dados Pessoais
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-                <div className="sm:col-span-2">
-                  <label className="block text-[#7E7265] mb-1">NOME COMPLETO *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Seu nome completo"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
-                  />
+            {/* 1. DADOS PESSOAIS & IDENTIFICAÇÃO OBRIGATÓRIA */}
+            {!isCustomerAuthenticated ? (
+              <div
+                id="etapa-identificacao"
+                className="bg-[#FDFCF9] border-2 border-[#1E3524]/60 p-6 rounded-sm shadow-sm relative"
+              >
+                {/* Header com aviso claro */}
+                <div className="mb-4 pb-3 border-b border-stone-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-900 bg-amber-100 px-2 py-0.5 rounded font-semibold">
+                      ETAPA 1 DE 3 &bull; IDENTIFICAÇÃO OBRIGATÓRIA
+                    </span>
+                    <span className="text-[10px] font-mono text-stone-500">
+                      Login Seguro
+                    </span>
+                  </div>
+                  <h2 className="text-base font-bold uppercase tracking-wide text-[#2E2620]">
+                    Acesse sua conta para concluir a compra
+                  </h2>
+                  <p className="text-xs text-stone-600 mt-1">
+                    Para garantir a emissão da reserva, cálculo de frete e rastreio, é necessário estar cadastrado e logado.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-[#7E7265] mb-1">WHATSAPP / CELULAR *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="(11) 99999-9999"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
-                  />
+                {/* Abas: Já Tenho Cadastro / Criar Minha Conta */}
+                <div className="flex border-b border-stone-200 mb-5">
+                  <button
+                    type="button"
+                    onClick={() => setAuthTab("login")}
+                    className={`flex-1 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-center border-b-2 transition-colors ${
+                      authTab === "login"
+                        ? "border-[#1E3524] text-[#1E3524] bg-[#F5EFE6]/50"
+                        : "border-transparent text-stone-500 hover:text-stone-800"
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-1.5">
+                      <LogIn className="w-3.5 h-3.5" />
+                      Já Tenho Cadastro
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAuthTab("register")}
+                    className={`flex-1 py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-center border-b-2 transition-colors ${
+                      authTab === "register"
+                        ? "border-[#1E3524] text-[#1E3524] bg-[#F5EFE6]/50"
+                        : "border-transparent text-stone-500 hover:text-stone-800"
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-1.5">
+                      <UserPlus className="w-3.5 h-3.5" />
+                      Criar Minha Conta
+                    </span>
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-[#7E7265] mb-1">CPF (PARA NOTA FISCAL)</label>
-                  <input
-                    type="text"
-                    placeholder="000.000.000-00"
-                    value={customerCpf}
-                    onChange={(e) => setCustomerCpf(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
-                  />
+                {/* Aba 1: Já Tenho Cadastro */}
+                {authTab === "login" ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                      <div>
+                        <label className="block text-[#7E7265] mb-1">E-MAIL CADASTRADO *</label>
+                        <input
+                          type="email"
+                          placeholder="mateus.souza@gmail.com"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#7E7265] mb-1">SENHA *</label>
+                        <input
+                          type="password"
+                          placeholder="••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                      <Button
+                        type="button"
+                        onClick={handleInlineLogin}
+                        className="bg-[#1E3524] hover:bg-[#142418] text-white text-xs font-mono font-semibold py-2.5 px-5 h-auto uppercase tracking-wider"
+                      >
+                        Entrar e Prosseguir
+                      </Button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginEmail("mateus.souza@gmail.com");
+                          setLoginPassword("123456");
+                          loginCustomer("mateus.souza@gmail.com", "123456");
+                          toast.success("Logado como Mateus Ribeiro de Souza!");
+                        }}
+                        className="text-[11px] text-[#1E3524] underline hover:text-[#142418] font-mono text-left sm:text-right"
+                      >
+                        Atalho Demo: mateus.souza@gmail.com
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Aba 2: Criar Minha Conta */
+                  <div className="space-y-4 text-xs font-mono">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[#7E7265] mb-1">NOME COMPLETO *</label>
+                        <input
+                          type="text"
+                          placeholder="Seu nome completo"
+                          value={regName}
+                          onChange={(e) => setRegName(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#7E7265] mb-1">E-MAIL *</label>
+                        <input
+                          type="email"
+                          placeholder="seu.email@exemplo.com"
+                          value={regEmail}
+                          onChange={(e) => setRegEmail(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#7E7265] mb-1">WHATSAPP / CELULAR *</label>
+                        <input
+                          type="tel"
+                          placeholder="(11) 99999-9999"
+                          value={regPhone}
+                          onChange={(e) => setRegPhone(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#7E7265] mb-1">CPF (PARA NOTA FISCAL)</label>
+                        <input
+                          type="text"
+                          placeholder="000.000.000-00"
+                          value={regCpf}
+                          onChange={(e) => setRegCpf(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#7E7265] mb-1">CRIAR SENHA *</label>
+                        <input
+                          type="password"
+                          placeholder="••••••••"
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#1E3524]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        onClick={handleInlineRegister}
+                        className="bg-[#1E3524] hover:bg-[#142418] text-white text-xs font-mono font-semibold py-2.5 px-5 h-auto uppercase tracking-wider"
+                      >
+                        Cadastrar e Continuar Pedido
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* CLIENTE AUTENTICADO */
+              <div id="etapa-identificacao" className="bg-[#FDFCF9] border border-stone-200 p-6 rounded-sm shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 pb-3 border-b border-stone-200">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#1E3524] bg-[#EBF2EB] px-2 py-0.5 rounded font-semibold inline-block mb-1">
+                      ✓ CLIENTE AUTENTICADO
+                    </span>
+                    <h2 className="text-base font-bold uppercase tracking-wide text-[#2E2620]">
+                      Etapa 1 de 3 &bull; Dados Pessoais
+                    </h2>
+                    <p className="text-xs text-stone-600 mt-0.5">
+                      Conectado como <strong className="text-[#2E2620]">{customer?.name}</strong> ({customer?.email})
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logoutCustomer();
+                      setCustomerName("");
+                      setCustomerEmail("");
+                      setCustomerPhone("");
+                      setCustomerCpf("");
+                      toast.info("Você saiu da conta.");
+                    }}
+                    className="text-xs font-mono text-stone-500 hover:text-red-600 underline flex items-center gap-1 self-start sm:self-auto"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Trocar Conta / Sair
+                  </button>
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-[#7E7265] mb-1">E-MAIL (PARA RECEBER RASTREIO)</label>
-                  <input
-                    type="email"
-                    placeholder="seu.email@exemplo.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[#7E7265] mb-1">NOME COMPLETO *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Seu nome completo"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#7E7265] mb-1">WHATSAPP / CELULAR *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="(11) 99999-9999"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#7E7265] mb-1">CPF (PARA NOTA FISCAL)</label>
+                    <input
+                      type="text"
+                      placeholder="000.000.000-00"
+                      value={customerCpf}
+                      onChange={(e) => setCustomerCpf(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[#7E7265] mb-1">E-MAIL (PARA RECEBER RASTREIO)</label>
+                    <input
+                      type="email"
+                      placeholder="seu.email@exemplo.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* 2. ENDEREÇO DE ENTREGA */}
             <div className="bg-[#FDFCF9] border border-stone-200 p-6 rounded-sm shadow-xs">
@@ -800,9 +1063,11 @@ export function CheckoutView() {
                   className="w-full h-14 bg-[#1E3524] hover:bg-[#142418] text-white font-mono uppercase tracking-widest text-xs font-bold rounded-sm gap-2 shadow-lg transition-transform active:scale-[0.99]"
                 >
                   <Sparkles className="h-4 w-4" />
-                  {paymentMethod === "PIX"
-                    ? "Gerar QR Code PIX e Finalizar"
-                    : "Continuar para Pagamento"}
+                  {isCustomerAuthenticated
+                    ? paymentMethod === "PIX"
+                      ? "Gerar QR Code PIX e Finalizar"
+                      : "Continuar para Pagamento"
+                    : "Faça Login ou Cadastre-se para Finalizar"}
                 </Button>
 
                 <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-[#7E7265]">

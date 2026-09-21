@@ -4,11 +4,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Search, Menu, X, ChevronRight } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, ChevronRight, User, LogOut } from "lucide-react";
 import { OFFICIAL_PRODUCTS } from "@/lib/catalog";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 export function Header() {
   const pathname = usePathname();
+  const { customer, isCustomerAuthenticated, logoutCustomer } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,6 +100,39 @@ export function Header() {
             >
               <Search className="h-4 w-4" />
             </button>
+
+            {/* Login do Cliente */}
+            {isCustomerAuthenticated ? (
+              <div className="flex items-center gap-1.5 bg-[#EBF2EB] px-2.5 py-1 rounded-sm">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider text-[#1E3524] font-semibold hover:underline"
+                  title={`Conectado como ${customer?.name}`}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">Olá, {customer?.name.split(" ")[0]}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logoutCustomer();
+                    toast.info("Você saiu da sua conta.");
+                  }}
+                  className="text-stone-500 hover:text-red-600 transition-colors p-0.5 ml-1"
+                  title="Sair da Conta"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden sm:inline-flex items-center gap-1 text-xs font-mono uppercase tracking-widest font-medium text-[#2E2620] hover:text-[#1E3524] transition-colors"
+              >
+                <User className="h-3.5 w-3.5" />
+                <span>ENTRAR</span>
+              </Link>
+            )}
 
             <Link
               href="/rastreio"
@@ -265,8 +301,48 @@ export function Header() {
                 </button>
               </div>
 
+              {/* Status da Conta do Cliente no Mobile */}
+              <div className="py-3 border-b border-stone-200">
+                {isCustomerAuthenticated ? (
+                  <div className="bg-[#EBF2EB] p-3 rounded-sm flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-mono text-[#1E3524] uppercase font-bold tracking-wider">
+                        Cliente Conectado
+                      </div>
+                      <div className="text-xs font-mono font-semibold text-[#2E2620]">
+                        {customer?.name}
+                      </div>
+                      <div className="text-[10px] font-mono text-stone-500">
+                        {customer?.email}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logoutCustomer();
+                        setMobileMenuOpen(false);
+                        toast.info("Você saiu da sua conta.");
+                      }}
+                      className="text-xs font-mono text-red-600 hover:underline flex items-center gap-1"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      Sair
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#1E3524] text-white rounded-sm text-xs font-mono font-bold uppercase tracking-wider"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Entrar ou Cadastrar</span>
+                  </Link>
+                )}
+              </div>
+
               {/* Links de Departamentos */}
-              <div className="py-6 space-y-2">
+              <div className="py-4 space-y-2">
                 <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#8C7A68] px-2 mb-2">
                   DEPARTAMENTOS
                 </div>

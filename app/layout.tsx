@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth-context";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,10 +36,12 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${spaceMono.variable} min-h-screen bg-[#FAF7F2] text-[#2E2620] flex flex-col font-sans antialiased`}
       >
-        <Header />
-        <div className="flex-1 flex flex-col">{children}</div>
-        <Footer />
-        <Toaster position="bottom-right" richColors />
+        <AuthProvider>
+          <Header />
+          <div className="flex-1 flex flex-col">{children}</div>
+          <Footer />
+          <Toaster position="bottom-right" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
