@@ -19,6 +19,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { ProductReviews } from "@/components/product-reviews";
+import { FitFinderModal } from "@/components/fit-finder-modal";
 
 interface ProductDetailViewProps {
   product: ProductData;
@@ -34,6 +35,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     variantsForColor[0]?.id || product.variants[0]?.id || ""
   );
+  const [fitFinderOpen, setFitFinderOpen] = useState(false);
 
   const activeVariant: VariantData | undefined =
     product.variants.find((v) => v.id === selectedVariantId) || variantsForColor[0];
@@ -239,9 +241,19 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               {/* Seletor de Grade de Tamanhos */}
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs font-mono uppercase tracking-widest text-[#7E7265]">
-                    SELECIONE O TAMANHO:
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#7E7265]">
+                      TAMANHO:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFitFinderOpen(true)}
+                      className="text-[11px] font-mono text-[#1E3524] hover:text-[#152519] underline flex items-center gap-1 font-semibold"
+                    >
+                      <Ruler className="w-3.5 h-3.5" />
+                      <span>Provador Virtual</span>
+                    </button>
+                  </div>
                   <span className="text-[11px] font-mono text-[#586E53]">
                     ● {activeVariant?.stockAvailable || 0} unidades em estoque
                   </span>
@@ -492,6 +504,21 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
         {/* Avaliações e Prova Social */}
         <ProductReviews productTitle={product.name} />
+
+        {/* Modal do Provador Virtual */}
+        <FitFinderModal
+          isOpen={fitFinderOpen}
+          onClose={() => setFitFinderOpen(false)}
+          onSelectSize={(size) => {
+            const found =
+              variantsForColor.find((v) => v.size === size) ||
+              product.variants.find((v) => v.size === size);
+            if (found) {
+              setSelectedVariantId(found.id);
+            }
+          }}
+          availableSizes={Array.from(new Set(product.variants.map((v) => v.size)))}
+        />
       </div>
     </div>
   );

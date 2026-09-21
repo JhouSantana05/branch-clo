@@ -24,6 +24,9 @@ import {
   SlidersHorizontal,
   X,
   Sparkles,
+  Upload,
+  ImageIcon,
+  Camera,
 } from "lucide-react";
 
 export function AdminProductsView() {
@@ -38,6 +41,29 @@ export function AdminProductsView() {
   const [newCategory, setNewCategory] = useState("Linha Adulto");
   const [newPrice, setNewPrice] = useState("129.90");
   const [newStock, setNewStock] = useState("20");
+  const [newImageUrl, setNewImageUrl] = useState<string>("/catalog/tee-oversized-offwhite-frente.jpeg");
+  const [imageFileName, setImageFileName] = useState<string>("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A foto deve ter no máximo 5MB.");
+      return;
+    }
+
+    setImageFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setNewImageUrl(reader.result);
+        toast.success("Foto da peça carregada com sucesso!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Ajuste de Estoque
   const handleStockChange = (productId: string, variantId: string, delta: number) => {
@@ -130,7 +156,7 @@ export function AdminProductsView() {
       images: [
         {
           id: `img-${Date.now()}`,
-          url: "/catalog/tee-oversized-offwhite-frente.jpeg",
+          url: newImageUrl,
           altText: newName,
           isMain: true,
           displayOrder: 1,
@@ -182,6 +208,8 @@ export function AdminProductsView() {
     setProducts([newProd, ...products]);
     setShowAddModal(false);
     setNewName("");
+    setNewImageUrl("/catalog/tee-oversized-offwhite-frente.jpeg");
+    setImageFileName("");
     toast.success(`Peça "${newProd.name}" adicionada ao catálogo com sucesso!`);
   };
 
@@ -493,6 +521,96 @@ export function AdminProductsView() {
                     onChange={(e) => setNewPrice(e.target.value)}
                     className="w-full px-3 py-2.5 bg-white border border-[#E8E1D5] rounded-lg text-xs text-[#2E2620] focus:outline-none focus:border-[#1E3524]"
                   />
+                </div>
+              </div>
+
+              {/* FOTO DA PEÇA */}
+              <div>
+                <label className="block text-stone-700 mb-1">
+                  FOTO DA PEÇA *
+                </label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div className="bg-white border border-[#E8E1D5] rounded-lg p-3.5 flex flex-col sm:flex-row items-center gap-4">
+                  {/* Thumbnail Preview */}
+                  <div className="relative w-20 h-24 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
+                    <Image
+                      src={newImageUrl}
+                      alt="Prévia da peça"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  {/* Actions & Preset Buttons */}
+                  <div className="flex-1 space-y-2 text-center sm:text-left">
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-[#1E3524] hover:bg-[#152519] text-white text-[11px] font-mono h-8 flex items-center gap-1.5"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{imageFileName ? "Trocar Foto" : "Fazer Upload de Foto"}</span>
+                      </Button>
+
+                      {imageFileName && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImageFileName("");
+                            setNewImageUrl("/catalog/tee-oversized-offwhite-frente.jpeg");
+                          }}
+                          className="text-[10px] text-red-600 hover:underline font-mono"
+                        >
+                          Restaurar Padrão
+                        </button>
+                      )}
+                    </div>
+
+                    {imageFileName ? (
+                      <p className="text-[10px] text-emerald-800 font-mono truncate max-w-xs">
+                        Arquivo carregado: {imageFileName}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-stone-500 font-mono">
+                        Ou escolha um modelo rápido da galeria:
+                      </p>
+                    )}
+
+                    {/* Presets rápidos */}
+                    <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
+                      {[
+                        { label: "Off-White", url: "/catalog/tee-oversized-offwhite-frente.jpeg" },
+                        { label: "Preto", url: "/catalog/tee-oversized-preto-frente.jpeg" },
+                        { label: "Marrom", url: "/catalog/hoodie-boxy-marrom-frente.jpeg" },
+                        { label: "Couro", url: "/catalog/detalhes-costura.jpeg" },
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            setNewImageUrl(preset.url);
+                            setImageFileName("");
+                          }}
+                          className={`text-[10px] px-2 py-0.5 rounded border font-mono transition-colors ${
+                            newImageUrl === preset.url && !imageFileName
+                              ? "bg-[#2E2620] text-white border-[#2E2620]"
+                              : "bg-[#FAF7F2] text-stone-600 border-stone-200 hover:border-stone-400"
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
