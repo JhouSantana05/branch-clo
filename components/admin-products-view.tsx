@@ -27,6 +27,7 @@ import {
   Upload,
   ImageIcon,
   Camera,
+  Trash2,
 } from "lucide-react";
 
 export function AdminProductsView() {
@@ -35,13 +36,14 @@ export function AdminProductsView() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"estoque" | "precos">("estoque");
 
-  // Novo Produto Modal State
+  // Modal State (Cadastrar ou Editar)
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState("Linha Adulto");
-  const [newPrice, setNewPrice] = useState("129.90");
-  const [newStock, setNewStock] = useState("20");
-  const [newImageUrl, setNewImageUrl] = useState<string>("/catalog/tee-oversized-offwhite-frente.jpeg");
+  const [newPrice, setNewPrice] = useState("");
+  const [newStock, setNewStock] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState<string>("");
   const [imageFileName, setImageFileName] = useState<string>("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -138,79 +140,147 @@ export function AdminProductsView() {
     0
   );
 
-  const handleCreateProduct = (e: React.FormEvent) => {
+  const handleOpenCreateModal = () => {
+    setEditingProductId(null);
+    setNewName("");
+    setNewCategory("Linha Adulto");
+    setNewPrice("");
+    setNewStock("");
+    setNewImageUrl("");
+    setImageFileName("");
+    setShowAddModal(true);
+  };
+
+  const handleOpenEditModal = (product: ProductData) => {
+    setEditingProductId(product.id);
+    setNewName(product.name);
+    setNewCategory(product.categoryName);
+    const basePrice = product.variants[0]?.regularPrice || 129.9;
+    setNewPrice(basePrice.toString());
+    const firstStock = product.variants[0]?.stockAvailable ?? 10;
+    setNewStock(firstStock.toString());
+    setNewImageUrl(product.images[0]?.url || "");
+    setImageFileName("");
+    setShowAddModal(true);
+  };
+
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir a peça "${productName}" do catálogo?`)) {
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      toast.success(`Peça "${productName}" excluída do catálogo com sucesso.`);
+    }
+  };
+
+  const handleCreateOrUpdateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
 
     const parsedPrice = parseFloat(newPrice.replace(",", ".")) || 129.9;
     const parsedStock = parseInt(newStock) || 10;
     const slug = newName.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-");
+    const finalImageUrl = newImageUrl || "/catalog/tee-oversized-offwhite-frente.jpeg";
 
-    const newProd: ProductData = {
-      id: `prod-${Date.now()}`,
-      name: newName,
-      slug: slug,
-      categoryName: newCategory,
-      description: "Nova peça da coleção autoral Branch Clo em Suedine 205g.",
-      fabricComposition: "Suedine Premium 205g 100% Algodão",
-      images: [
-        {
-          id: `img-${Date.now()}`,
-          url: newImageUrl,
-          altText: newName,
-          isMain: true,
-          displayOrder: 1,
-        },
-      ],
-      variants: [
-        {
-          id: `var-p-${Date.now()}`,
-          size: "P",
-          colorName: "Off-White",
-          hexColor: "#F5F1E8",
-          skuCode: `BC-${slug.toUpperCase()}-P`,
-          regularPrice: parsedPrice,
-          stockAvailable: parsedStock,
-          weightGrams: 280,
-          heightCm: 4,
-          widthCm: 25,
-          lengthCm: 32,
-        },
-        {
-          id: `var-m-${Date.now()}`,
-          size: "M",
-          colorName: "Off-White",
-          hexColor: "#F5F1E8",
-          skuCode: `BC-${slug.toUpperCase()}-M`,
-          regularPrice: parsedPrice,
-          stockAvailable: parsedStock,
-          weightGrams: 280,
-          heightCm: 4,
-          widthCm: 25,
-          lengthCm: 32,
-        },
-        {
-          id: `var-g-${Date.now()}`,
-          size: "G",
-          colorName: "Off-White",
-          hexColor: "#F5F1E8",
-          skuCode: `BC-${slug.toUpperCase()}-G`,
-          regularPrice: parsedPrice,
-          stockAvailable: parsedStock,
-          weightGrams: 280,
-          heightCm: 4,
-          widthCm: 25,
-          lengthCm: 32,
-        },
-      ],
-    };
+    if (editingProductId) {
+      // Atualizar peça existente
+      setProducts((prev) =>
+        prev.map((prod) => {
+          if (prod.id !== editingProductId) return prod;
+          return {
+            ...prod,
+            name: newName,
+            slug: slug,
+            categoryName: newCategory,
+            images: [
+              {
+                id: prod.images[0]?.id || `img-${Date.now()}`,
+                url: finalImageUrl,
+                altText: newName,
+                isMain: true,
+                displayOrder: 1,
+              },
+              ...prod.images.slice(1),
+            ],
+            variants: prod.variants.map((v) => ({
+              ...v,
+              regularPrice: parsedPrice,
+              stockAvailable: parsedStock > 0 ? parsedStock : v.stockAvailable,
+            })),
+          };
+        })
+      );
+      toast.success(`Peça "${newName}" atualizada com sucesso!`);
+    } else {
+      // Inserir nova peça
+      const newProd: ProductData = {
+        id: `prod-${Date.now()}`,
+        name: newName,
+        slug: slug,
+        categoryName: newCategory,
+        description: "Nova peça da coleção autoral Branch Clo em Suedine 205g.",
+        fabricComposition: "Suedine Premium 205g 100% Algodão",
+        images: [
+          {
+            id: `img-${Date.now()}`,
+            url: finalImageUrl,
+            altText: newName,
+            isMain: true,
+            displayOrder: 1,
+          },
+        ],
+        variants: [
+          {
+            id: `var-p-${Date.now()}`,
+            size: "P",
+            colorName: "Off-White",
+            hexColor: "#F5F1E8",
+            skuCode: `BC-${slug.toUpperCase()}-P`,
+            regularPrice: parsedPrice,
+            stockAvailable: parsedStock,
+            weightGrams: 280,
+            heightCm: 4,
+            widthCm: 25,
+            lengthCm: 32,
+          },
+          {
+            id: `var-m-${Date.now()}`,
+            size: "M",
+            colorName: "Off-White",
+            hexColor: "#F5F1E8",
+            skuCode: `BC-${slug.toUpperCase()}-M`,
+            regularPrice: parsedPrice,
+            stockAvailable: parsedStock,
+            weightGrams: 280,
+            heightCm: 4,
+            widthCm: 25,
+            lengthCm: 32,
+          },
+          {
+            id: `var-g-${Date.now()}`,
+            size: "G",
+            colorName: "Off-White",
+            hexColor: "#F5F1E8",
+            skuCode: `BC-${slug.toUpperCase()}-G`,
+            regularPrice: parsedPrice,
+            stockAvailable: parsedStock,
+            weightGrams: 280,
+            heightCm: 4,
+            widthCm: 25,
+            lengthCm: 32,
+          },
+        ],
+      };
 
-    setProducts([newProd, ...products]);
+      setProducts([newProd, ...products]);
+      toast.success(`Peça "${newProd.name}" adicionada ao catálogo com sucesso!`);
+    }
+
     setShowAddModal(false);
+    setEditingProductId(null);
     setNewName("");
-    setNewImageUrl("/catalog/tee-oversized-offwhite-frente.jpeg");
+    setNewPrice("");
+    setNewStock("");
+    setNewImageUrl("");
     setImageFileName("");
-    toast.success(`Peça "${newProd.name}" adicionada ao catálogo com sucesso!`);
   };
 
   return (
@@ -240,7 +310,7 @@ export function AdminProductsView() {
           </Link>
           <Button
             size="sm"
-            onClick={() => setShowAddModal(true)}
+            onClick={handleOpenCreateModal}
             className="bg-[#1E3524] hover:bg-[#152519] text-white text-xs font-mono flex items-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -364,7 +434,7 @@ export function AdminProductsView() {
                       Slug: /{product.slug}
                     </p>
 
-                    <div className="mt-2 flex items-center gap-3">
+                    <div className="mt-2 flex flex-wrap items-center gap-2.5">
                       <Link
                         href={`/produtos/${product.slug}`}
                         target="_blank"
@@ -373,6 +443,26 @@ export function AdminProductsView() {
                         <span>Ver na Loja</span>
                         <ExternalLink className="w-3 h-3" />
                       </Link>
+                      <span className="text-xs text-stone-300">&bull;</span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditModal(product)}
+                        className="text-xs text-stone-700 hover:text-[#1E3524] flex items-center gap-1 font-mono font-medium hover:underline"
+                        title="Editar dados da peça"
+                      >
+                        <Edit3 className="w-3 h-3 text-[#1E3524]" />
+                        <span>Editar</span>
+                      </button>
+                      <span className="text-xs text-stone-300">&bull;</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(product.id, product.name)}
+                        className="text-xs text-stone-500 hover:text-red-600 flex items-center gap-1 font-mono hover:underline"
+                        title="Excluir peça do catálogo"
+                      >
+                        <Trash2 className="w-3 h-3 text-stone-400 hover:text-red-500" />
+                        <span>Excluir</span>
+                      </button>
                       <span className="text-xs text-stone-300">&bull;</span>
                       <span className="text-xs font-mono font-bold text-[#2E2620]">
                         Preço Base: {formatCurrency(basePrice)}
@@ -472,8 +562,14 @@ export function AdminProductsView() {
           <div className="relative w-full max-w-lg bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] shadow-2xl p-6 sm:p-8 z-10 animate-in fade-in-0 zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-4 border-b border-[#E8E1D5] mb-5">
               <div>
-                <h3 className="text-xl font-serif font-bold text-[#2E2620]">Cadastrar Nova Peça</h3>
-                <p className="text-xs text-stone-500 mt-0.5">Adicione um novo modelo ao catálogo da Branch Clo.</p>
+                <h3 className="text-xl font-serif font-bold text-[#2E2620]">
+                  {editingProductId ? "Editar Peça do Catálogo" : "Cadastrar Nova Peça"}
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  {editingProductId
+                    ? "Altere os dados, foto ou valores desta peça."
+                    : "Preencha os dados e escolha a foto da nova peça."}
+                </p>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -483,7 +579,7 @@ export function AdminProductsView() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateProduct} className="space-y-4 text-xs font-mono">
+            <form onSubmit={handleCreateOrUpdateProduct} className="space-y-4 text-xs font-mono">
               <div>
                 <label className="block text-stone-700 mb-1">NOME DA PEÇA *</label>
                 <input
@@ -539,13 +635,20 @@ export function AdminProductsView() {
 
                 <div className="bg-white border border-[#E8E1D5] rounded-lg p-3.5 flex flex-col sm:flex-row items-center gap-4">
                   {/* Thumbnail Preview */}
-                  <div className="relative w-20 h-24 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shrink-0">
-                    <Image
-                      src={newImageUrl}
-                      alt="Prévia da peça"
-                      fill
-                      className="object-cover"
-                    />
+                  <div className="relative w-20 h-24 rounded-md overflow-hidden bg-stone-100 border border-stone-200 shrink-0 flex items-center justify-center">
+                    {newImageUrl ? (
+                      <Image
+                        src={newImageUrl}
+                        alt="Prévia da peça"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-stone-400 p-2 text-center">
+                        <Camera className="w-6 h-6 mb-1 text-stone-400" />
+                        <span className="text-[9px] leading-tight font-mono">Sem foto</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions & Preset Buttons */}
@@ -639,7 +742,7 @@ export function AdminProductsView() {
                   type="submit"
                   className="bg-[#1E3524] hover:bg-[#152519] text-white text-xs font-mono"
                 >
-                  Confirmar Cadastro
+                  {editingProductId ? "Salvar Alterações" : "Confirmar Cadastro"}
                 </Button>
               </div>
             </form>
