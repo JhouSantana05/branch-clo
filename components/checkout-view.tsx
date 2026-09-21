@@ -19,6 +19,8 @@ import {
   Sparkles,
   QrCode,
   CreditCard,
+  Tag,
+  X,
 } from "lucide-react";
 
 export function CheckoutView() {
@@ -76,17 +78,60 @@ export function CheckoutView() {
   const [generatedOrderNumber, setGeneratedOrderNumber] = useState("");
   const [countdown, setCountdown] = useState(15 * 60); // 15 minutos em segundos
 
+  // Cupom de Desconto
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    type: "PERCENT" | "FIXED" | "FREE_SHIPPING";
+    value: number;
+  } | null>(null);
+
   // Cálculos
   const subtotal = unitPrice * quantity;
   const isFreeShipping = subtotal >= 399;
-  const shippingCost = isFreeShipping
+  const standardShippingCost = isFreeShipping
     ? 0
     : shippingMethod === "PAC"
     ? 14.9
     : 22.9;
 
-  const pixDiscount = paymentMethod === "PIX" ? subtotal * 0.05 : 0;
-  const totalAmount = subtotal + shippingCost - pixDiscount;
+  const shippingCost = appliedCoupon?.type === "FREE_SHIPPING" ? 0 : standardShippingCost;
+
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.type === "PERCENT"
+      ? subtotal * appliedCoupon.value
+      : appliedCoupon.type === "FIXED"
+      ? Math.min(subtotal, appliedCoupon.value)
+      : 0
+    : 0;
+
+  const subtotalAfterCoupon = Math.max(0, subtotal - couponDiscount);
+  const pixDiscount = paymentMethod === "PIX" ? subtotalAfterCoupon * 0.05 : 0;
+  const totalAmount = subtotalAfterCoupon + shippingCost - pixDiscount;
+
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+
+    if (code === "THEVINE10") {
+      setAppliedCoupon({ code, type: "PERCENT", value: 0.1 });
+      toast.success("Cupom THEVINE10 aplicado! 10% de desconto adicional.");
+    } else if (code === "PRIMEIRACOMPRA") {
+      setAppliedCoupon({ code, type: "FIXED", value: 20.0 });
+      toast.success("Cupom PRIMEIRACOMPRA aplicado! R$ 20,00 de desconto.");
+    } else if (code === "FRETEGRATIS") {
+      setAppliedCoupon({ code, type: "FREE_SHIPPING", value: 0 });
+      toast.success("Cupom FRETEGRATIS aplicado! Frete 100% grátis.");
+    } else {
+      toast.error("Cupom inválido ou expirado");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    toast.info("Cupom removido.");
+  };
 
   // Simulação de busca de CEP
   const handleCepLookup = () => {
@@ -153,7 +198,8 @@ export function CheckoutView() {
         `*Cliente:* ${customerName}\n` +
         `*WhatsApp:* ${customerPhone}\n\n` +
         `*Itens:* ${quantity}x ${product.name} (${colorParam} - Tam: ${sizeParam})\n` +
-        `*Frete:* ${shippingMethod} (${formatCurrency(shippingCost)})\n` +
+        `*Cupom:* ${appliedCoupon ? `${appliedCoupon.code} (-${formatCurrency(couponDiscount)})` : "Nenhum"}\n` +
+        `*Frete:* ${shippingMethod} (${shippingCost === 0 ? "Grátis" : formatCurrency(shippingCost)})\n` +
         `*Forma de Pagamento:* ${paymentMethod === "PIX" ? "PIX (5% OFF)" : "Cartão de Crédito"}\n` +
         `*Valor Total:* ${formatCurrency(totalAmount)}\n\n` +
         `*Endereço de Entrega:* ${street}, Nº ${number} ${complement ? "- " + complement : ""}, ${neighborhood}, ${city} - ${state}, CEP ${cep}\n\n` +
@@ -635,12 +681,85 @@ export function CheckoutView() {
                 </div>
               </div>
 
+              {/* Cupom de Desconto */}
+              <div className="py-4 border-b border-stone-200">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C7A68] block mb-1.5">
+                  Possui cupom de desconto?
+                </span>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-sm text-xs font-mono text-emerald-800">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="font-bold">{appliedCoupon.code}</span>
+                      <span>
+                        ({appliedCoupon.type === "PERCENT" ? "10% OFF" : appliedCoupon.type === "FIXED" ? "- R$ 20,00" : "Frete Grátis"})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="p-1 hover:bg-emerald-100 rounded text-emerald-700"
+                      title="Remover cupom"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ex: THEVINE10"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        className="w-full px-3 py-1.5 bg-white border border-stone-300 rounded-sm text-xs font-mono uppercase focus:outline-none focus:border-[#2E2620]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="px-3 py-1.5 bg-[#1E3524] text-white hover:bg-[#152519] rounded-sm text-xs font-mono font-medium"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-2 text-[10px] font-mono text-stone-500">
+                      <span>Sugestão:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCouponInput("THEVINE10");
+                        }}
+                        className="underline hover:text-[#1E3524]"
+                      >
+                        THEVINE10
+                      </button>
+                      <span>•</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCouponInput("PRIMEIRACOMPRA");
+                        }}
+                        className="underline hover:text-[#1E3524]"
+                      >
+                        PRIMEIRACOMPRA
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Ficha de Valores */}
               <div className="py-4 space-y-2 text-xs font-mono text-[#52463C] border-b border-stone-200">
                 <div className="flex justify-between">
                   <span>Subtotal ({quantity} {quantity === 1 ? "peça" : "peças"}):</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-semibold">
+                    <span>Cupom ({appliedCoupon?.code}):</span>
+                    <span>- {formatCurrency(couponDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Frete ({shippingMethod}):</span>
                   <span>{shippingCost === 0 ? "GRÁTIS" : formatCurrency(shippingCost)}</span>

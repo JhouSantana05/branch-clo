@@ -124,14 +124,19 @@ export function AdminOrdersView() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link href="/admin/produtos">
+            <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6] text-xs font-mono">
+              Gestão de Estoque
+            </Button>
+          </Link>
           <Link href="/checkout">
-            <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6]">
-              Simular Novo Checkout
+            <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6] text-xs font-mono">
+              Simular Checkout
             </Button>
           </Link>
           <Link href="/">
-            <Button size="sm" className="bg-[#1E3524] hover:bg-[#152519] text-white">
-              Ver Loja Online
+            <Button size="sm" className="bg-[#1E3524] hover:bg-[#152519] text-white text-xs font-mono">
+              Loja Online
             </Button>
           </Link>
         </div>

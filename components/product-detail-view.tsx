@@ -18,6 +18,7 @@ import {
   Ruler,
   Sparkles,
 } from "lucide-react";
+import { ProductReviews } from "@/components/product-reviews";
 
 interface ProductDetailViewProps {
   product: ProductData;
@@ -489,6 +490,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           </div>
         </div>
 
+        {/* Avaliações e Prova Social */}
+        <ProductReviews productTitle={product.name} />
       </div>
     </div>
   );
