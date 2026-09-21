@@ -124,4 +124,96 @@ export const INITIAL_ORDERS: OrderData[] = [
       },
     ],
   },
+  {
+    id: "ord-1000",
+    orderNumber: "#BC-2026-0980",
+    customerName: "Mateus Ribeiro de Souza",
+    customerPhone: "(11) 98765-4321",
+    customerEmail: "mateus.souza@gmail.com",
+    customerCpf: "123.456.789-00",
+    shippingAddress: {
+      street: "Avenida Paulista",
+      number: "1000",
+      complement: "Apto 42",
+      neighborhood: "Bela Vista",
+      city: "São Paulo",
+      state: "SP",
+      postalCode: "01310-100",
+    },
+    shippingMethod: "SEDEX",
+    shippingCost: 18.5,
+    paymentMethod: "PIX",
+    subtotal: 129.9,
+    discount: 6.5,
+    total: 141.9,
+    status: "ENTREGUE",
+    trackingCode: "BR987654321SP",
+    createdAt: "2026-09-12T11:00:00Z",
+    items: [
+      {
+        productName: "The Vine — João 15:5 (Linha Adulto)",
+        color: "Off-White",
+        size: "M",
+        quantity: 1,
+        unitPrice: 129.9,
+        imageUrl: "/catalog/tee-oversized-offwhite-frente.jpeg",
+      },
+    ],
+  },
 ];
+
+const ORDERS_STORAGE_KEY = "branch_clo_orders_db";
+
+export function getStoredOrders(): OrderData[] {
+  if (typeof window === "undefined") return INITIAL_ORDERS;
+  try {
+    const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
+    if (!raw) {
+      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(INITIAL_ORDERS));
+      return INITIAL_ORDERS;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return INITIAL_ORDERS;
+  }
+}
+
+export function saveNewOrder(newOrder: OrderData): void {
+  const current = getStoredOrders();
+  const updated = [newOrder, ...current.filter((o) => o.id !== newOrder.id)];
+  if (typeof window !== "undefined") {
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("branch_clo_orders_updated"));
+  }
+}
+
+export function updateOrderStatus(
+  orderId: string,
+  status: OrderData["status"],
+  trackingCode?: string
+): OrderData[] {
+  const current = getStoredOrders();
+  const updated = current.map((ord) => {
+    if (ord.id === orderId) {
+      return {
+        ...ord,
+        status,
+        trackingCode: trackingCode !== undefined ? trackingCode : ord.trackingCode,
+      };
+    }
+    return ord;
+  });
+  if (typeof window !== "undefined") {
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("branch_clo_orders_updated"));
+  }
+  return updated;
+}
+
+export function getCustomerOrders(customerEmail: string): OrderData[] {
+  const orders = getStoredOrders();
+  const cleanEmail = customerEmail.trim().toLowerCase();
+  return orders.filter(
+    (ord) => ord.customerEmail.trim().toLowerCase() === cleanEmail
+  );
+}

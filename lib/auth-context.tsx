@@ -18,6 +18,7 @@ export interface CustomerUser {
   email: string;
   phone: string;
   cpf: string;
+  password?: string;
   role: "CUSTOMER";
   address?: AddressData;
 }
@@ -51,6 +52,10 @@ interface AuthContextType {
     address?: AddressData
   ) => boolean;
   updateCustomerAddress: (address: AddressData) => void;
+  changeCustomerPassword: (
+    currentPass: string,
+    newPass: string
+  ) => { success: boolean; message: string };
   logoutCustomer: () => void;
   loginAdmin: (email: string, pass: string) => boolean;
   logoutAdmin: () => void;
@@ -66,6 +71,7 @@ const INITIAL_CUSTOMERS: CustomerUser[] = [
     email: "mateus.souza@gmail.com",
     phone: "(11) 98765-4321",
     cpf: "123.456.789-00",
+    password: "branchcliente",
     role: "CUSTOMER",
     address: {
       cep: "01310-100",
@@ -83,6 +89,7 @@ const INITIAL_CUSTOMERS: CustomerUser[] = [
     email: "priscila.alb@outlook.com",
     phone: "(21) 99812-3456",
     cpf: "987.654.321-11",
+    password: "branchcliente",
     role: "CUSTOMER",
     address: {
       cep: "22041-001",
@@ -151,6 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const found = customersList.find((c) => c.email.toLowerCase() === cleanEmail);
 
     if (found) {
+      if (found.password && _pass && found.password !== _pass) {
+        return false;
+      }
       setCustomer(found);
       localStorage.setItem("branch_clo_customer", JSON.stringify(found));
       return true;
@@ -163,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: cleanEmail,
       phone: "(11) 99999-9999",
       cpf: "000.000.000-00",
+      password: _pass || "branchcliente",
       role: "CUSTOMER",
       address: {
         cep: "01310-100",
@@ -205,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true, role: "CUSTOMER", message: "Login realizado com sucesso!" };
     }
 
-    return { success: false, message: "Credenciais inválidas." };
+    return { success: false, message: "E-mail ou senha inválidos." };
   };
 
   const registerCustomer = (
@@ -222,6 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (existing) {
       const updatedExisting = {
         ...existing,
+        password: _pass || existing.password || "branchcliente",
         address: address || existing.address,
       };
       setCustomer(updatedExisting);
@@ -235,6 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: cleanEmail,
       phone: phone.trim(),
       cpf: cpf.trim(),
+      password: _pass || "branchcliente",
       role: "CUSTOMER",
       address: address,
     };
@@ -265,6 +278,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const changeCustomerPassword = (
+    currentPass: string,
+    newPass: string
+  ): { success: boolean; message: string } => {
+    if (!customer) {
+      return { success: false, message: "Nenhum cliente conectado." };
+    }
+
+    if (!newPass || newPass.trim().length < 6) {
+      return { success: false, message: "A nova senha deve ter pelo menos 6 caracteres." };
+    }
+
+    // Se o cliente tem senha definida, checa a senha atual (ou senha padrão branchcliente)
+    if (customer.password && customer.password !== currentPass.trim() && currentPass.trim() !== "branchcliente") {
+      return { success: false, message: "A senha atual informada está incorreta." };
+    }
+
+    const updatedCustomer: CustomerUser = {
+      ...customer,
+      password: newPass.trim(),
+    };
+
+    setCustomer(updatedCustomer);
+    localStorage.setItem("branch_clo_customer", JSON.stringify(updatedCustomer));
+
+    setCustomersList((prev) => {
+      const updated = prev.map((c) => (c.id === customer.id ? updatedCustomer : c));
+      localStorage.setItem("branch_clo_customers_db", JSON.stringify(updated));
+      return updated;
+    });
+
+    return { success: true, message: "Senha alterada com sucesso! Utilize-a em seus próximos acessos." };
+  };
+
   const logoutCustomer = () => {
     setCustomer(null);
     localStorage.removeItem("branch_clo_customer");
@@ -286,6 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginCustomer,
         registerCustomer,
         updateCustomerAddress,
+        changeCustomerPassword,
         logoutCustomer,
         loginAdmin,
         logoutAdmin,

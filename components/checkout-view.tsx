@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { OFFICIAL_PRODUCTS } from "@/lib/catalog";
 import { formatCurrency } from "@/lib/utils";
+import { saveNewOrder, OrderData } from "@/lib/orders";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -298,6 +299,45 @@ export function CheckoutView() {
 
     const orderNum = `#BC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     setGeneratedOrderNumber(orderNum);
+
+    const newOrder: OrderData = {
+      id: `ord-${Date.now()}`,
+      orderNumber: orderNum,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      customerEmail: customerEmail || customer?.email || "cliente@branchclo.com.br",
+      customerCpf: customerCpf || customer?.cpf || "000.000.000-00",
+      shippingAddress: {
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+        postalCode: cep,
+      },
+      shippingMethod,
+      shippingCost,
+      paymentMethod,
+      subtotal,
+      discount: couponDiscount + pixDiscount,
+      total: totalAmount,
+      status: paymentMethod === "PIX" ? "AGUARDANDO_PIX" : "PAGO",
+      pixCode: simulatedPixCode,
+      createdAt: new Date().toISOString(),
+      items: [
+        {
+          productName: product.name,
+          color: colorParam,
+          size: sizeParam,
+          quantity,
+          unitPrice: unitPrice,
+          imageUrl: matchingImage,
+        },
+      ],
+    };
+    saveNewOrder(newOrder);
+
     setOrderConfirmed(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
     toast.success("Pedido gerado com sucesso!", {

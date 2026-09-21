@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { INITIAL_ORDERS, OrderData } from "@/lib/orders";
+import { OrderData, getStoredOrders, updateOrderStatus } from "@/lib/orders";
+import {
+  CustomerReview,
+  getStoredReviews,
+  toggleReviewFeatured,
+  deleteReview,
+} from "@/lib/reviews";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -26,6 +32,12 @@ import {
   AlertCircle,
   Lock,
   LogOut,
+  Star,
+  Trash2,
+  Eye,
+  EyeOff,
+  Check,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -67,15 +79,55 @@ export function AdminOrdersView() {
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
 
-  const [orders, setOrders] = useState<OrderData[]>(INITIAL_ORDERS);
+  const [adminTab, setAdminTab] = useState<"orders" | "reviews">("orders");
+
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  // Reviews State
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
+  const [reviewsFilter, setReviewsFilter] = useState<"ALL" | "FEATURED" | "NOT_FEATURED">("ALL");
+  const [reviewsSearch, setReviewsSearch] = useState<string>("");
+
+  useEffect(() => {
+    setOrders(getStoredOrders());
+    setReviews(getStoredReviews());
+
+    const handleOrdersSync = () => setOrders(getStoredOrders());
+    const handleReviewsSync = () => setReviews(getStoredReviews());
+
+    window.addEventListener("branch_clo_orders_updated", handleOrdersSync);
+    window.addEventListener("branch_clo_reviews_updated", handleReviewsSync);
+
+    return () => {
+      window.removeEventListener("branch_clo_orders_updated", handleOrdersSync);
+      window.removeEventListener("branch_clo_reviews_updated", handleReviewsSync);
+    };
+  }, []);
+
   const handleStatusChange = (orderId: string, newStatus: OrderData["status"]) => {
-    setOrders((prev) =>
-      prev.map((ord) => (ord.id === orderId ? { ...ord, status: newStatus } : ord))
-    );
+    const updated = updateOrderStatus(orderId, newStatus);
+    setOrders(updated);
     toast.success(`Status do pedido atualizado para "${STATUS_LABELS[newStatus].label}"`);
+  };
+
+  const handleToggleFeatured = (reviewId: string, currentFeatured: boolean) => {
+    const updated = toggleReviewFeatured(reviewId, !currentFeatured);
+    setReviews(updated);
+    if (!currentFeatured) {
+      toast.success("Avaliação adicionada aos destaques do final da Home!");
+    } else {
+      toast.info("Avaliação removida dos destaques da Home.");
+    }
+  };
+
+  const handleDeleteReview = (reviewId: string) => {
+    if (confirm("Tem certeza que deseja excluir esta avaliação?")) {
+      const updated = deleteReview(reviewId);
+      setReviews(updated);
+      toast.success("Avaliação removida.");
+    }
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -96,6 +148,30 @@ export function AdminOrdersView() {
 
   const totalRevenue = orders.reduce((acc, curr) => acc + curr.total, 0);
   const pendingCount = orders.filter((o) => o.status === "AGUARDANDO_PIX" || o.status === "EM_SEPARACAO").length;
+
+  const filteredReviews = reviews.filter((r) => {
+    const matchesFilter =
+      reviewsFilter === "ALL" ||
+      (reviewsFilter === "FEATURED" && r.featuredOnHome) ||
+      (reviewsFilter === "NOT_FEATURED" && !r.featuredOnHome);
+
+    const term = reviewsSearch.toLowerCase().trim();
+    if (!term) return matchesFilter;
+
+    return (
+      r.customerName.toLowerCase().includes(term) ||
+      r.customerEmail.toLowerCase().includes(term) ||
+      r.productName.toLowerCase().includes(term) ||
+      r.comment.toLowerCase().includes(term) ||
+      r.orderNumber.toLowerCase().includes(term)
+    );
+  });
+
+  const featuredReviewsCount = reviews.filter((r) => r.featuredOnHome).length;
+  const averageRating =
+    reviews.length > 0
+      ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+      : "5.0";
 
   const sendWhatsAppUpdate = (order: OrderData) => {
     const cleanPhone = order.customerPhone.replace(/\D/g, "");
@@ -230,8 +306,43 @@ export function AdminOrdersView() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      {/* Admin Tabs Navigation */}
+      <div className="flex border-b border-[#E8E1D5] mb-8 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setAdminTab("orders")}
+          className={`pb-3 px-4 text-xs font-mono tracking-wider uppercase font-semibold transition-colors border-b-2 -mb-[2px] flex items-center gap-2 whitespace-nowrap ${
+            adminTab === "orders"
+              ? "border-[#1E3524] text-[#1E3524]"
+              : "border-transparent text-stone-400 hover:text-stone-700"
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>Pedidos e Entregas ({orders.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setAdminTab("reviews")}
+          className={`pb-3 px-4 text-xs font-mono tracking-wider uppercase font-semibold transition-colors border-b-2 -mb-[2px] flex items-center gap-2 whitespace-nowrap ${
+            adminTab === "reviews"
+              ? "border-[#1E3524] text-[#1E3524]"
+              : "border-transparent text-stone-400 hover:text-stone-700"
+          }`}
+        >
+          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+          <span>Curadoria de Avaliações ({reviews.length})</span>
+          <span className="ml-1 text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+            {featuredReviewsCount} na Home
+          </span>
+        </button>
+      </div>
+
+      {/* TAB 1: PEDIDOS E ENTREGAS */}
+      {adminTab === "orders" && (
+        <>
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-[#F5EFE6] border border-[#E8E1D5] p-5 rounded-lg shadow-sm">
           <div className="flex items-center justify-between text-stone-600 text-xs font-mono uppercase tracking-wider mb-2">
             <span>Total de Pedidos</span>
@@ -474,6 +585,224 @@ export function AdminOrdersView() {
               </div>
             );
           })}
+        </div>
+      )}
+        </>
+      )}
+
+      {/* TAB 2: CURADORIA DE AVALIAÇÕES */}
+      {adminTab === "reviews" && (
+        <div className="space-y-6">
+          {/* Reviews KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="bg-[#F5EFE6] border border-[#E8E1D5] p-5 rounded-lg shadow-sm">
+              <div className="flex items-center justify-between text-stone-600 text-xs font-mono uppercase tracking-wider mb-2">
+                <span>Total de Avaliações</span>
+                <MessageCircle className="w-4 h-4 text-stone-500" />
+              </div>
+              <p className="text-2xl font-serif text-[#2E2620] font-bold">{reviews.length}</p>
+              <p className="text-xs text-stone-500 mt-1">Depoimentos enviados por clientes</p>
+            </div>
+
+            <div className="bg-[#EBF2EB] border border-[#C2D7C2] p-5 rounded-lg shadow-sm">
+              <div className="flex items-center justify-between text-stone-600 text-xs font-mono uppercase tracking-wider mb-2">
+                <span>Em Destaque na Home</span>
+                <Sparkles className="w-4 h-4 text-[#1E3524]" />
+              </div>
+              <p className="text-2xl font-serif text-[#1E3524] font-bold">{featuredReviewsCount}</p>
+              <p className="text-xs text-[#1E3524]/80 mt-1">Visíveis no final da página inicial</p>
+            </div>
+
+            <div className="bg-[#F5EFE6] border border-[#E8E1D5] p-5 rounded-lg shadow-sm">
+              <div className="flex items-center justify-between text-stone-600 text-xs font-mono uppercase tracking-wider mb-2">
+                <span>Média das Avaliações</span>
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              </div>
+              <p className="text-2xl font-serif text-amber-900 font-bold">{averageRating} / 5.0</p>
+              <p className="text-xs text-stone-500 mt-1">Classificação geral da coleção</p>
+            </div>
+          </div>
+
+          {/* Filtros e Busca */}
+          <div className="bg-white border border-[#E8E1D5] p-4 rounded-xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="relative w-full md:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Buscar por cliente, produto, cidade..."
+                value={reviewsSearch}
+                onChange={(e) => setReviewsSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[#FAF7F2] border border-[#E8E1D5] rounded-lg text-xs font-mono focus:outline-none focus:border-[#1E3524]"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <Button
+                variant={reviewsFilter === "ALL" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setReviewsFilter("ALL")}
+                className={`text-xs font-mono h-8 ${
+                  reviewsFilter === "ALL"
+                    ? "bg-[#1E3524] hover:bg-[#152519] text-white"
+                    : "border-stone-300 text-stone-700"
+                }`}
+              >
+                Todas ({reviews.length})
+              </Button>
+              <Button
+                variant={reviewsFilter === "FEATURED" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setReviewsFilter("FEATURED")}
+                className={`text-xs font-mono h-8 ${
+                  reviewsFilter === "FEATURED"
+                    ? "bg-[#1E3524] hover:bg-[#152519] text-white"
+                    : "border-stone-300 text-stone-700"
+                }`}
+              >
+                ★ Na Home ({featuredReviewsCount})
+              </Button>
+              <Button
+                variant={reviewsFilter === "NOT_FEATURED" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setReviewsFilter("NOT_FEATURED")}
+                className={`text-xs font-mono h-8 ${
+                  reviewsFilter === "NOT_FEATURED"
+                    ? "bg-[#1E3524] hover:bg-[#152519] text-white"
+                    : "border-stone-300 text-stone-700"
+                }`}
+              >
+                Ocultas ({reviews.length - featuredReviewsCount})
+              </Button>
+            </div>
+          </div>
+
+          {/* Lista de Avaliações */}
+          {filteredReviews.length === 0 ? (
+            <div className="bg-white border border-[#E8E1D5] rounded-2xl p-12 text-center font-sans">
+              <p className="text-sm font-mono text-stone-500">
+                Nenhuma avaliação encontrada com os filtros selecionados.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredReviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className={`bg-white rounded-2xl p-6 border transition-all shadow-xs flex flex-col justify-between ${
+                    rev.featuredOnHome
+                      ? "border-emerald-500/70 ring-1 ring-emerald-500/20"
+                      : "border-[#E8E1D5]"
+                  }`}
+                >
+                  <div>
+                    {/* Header do Card */}
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h3 className="font-serif font-bold text-base text-[#2E2620]">
+                            {rev.customerName}
+                          </h3>
+                          <span className="text-[10px] font-mono bg-[#FAF7F2] text-stone-600 px-2 py-0.5 rounded border border-[#E8E1D5]">
+                            {rev.customerCity}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-mono text-stone-400">
+                          {rev.customerEmail} &bull; Pedido {rev.orderNumber}
+                        </p>
+                      </div>
+
+                      {/* Badge de Destaque */}
+                      <div>
+                        {rev.featuredOnHome ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full border border-emerald-300">
+                            <Sparkles className="w-3 h-3" />
+                            <span>Destaque Ativo na Home</span>
+                          </span>
+                        ) : (
+                          <span className="inline-block text-[11px] font-mono bg-stone-100 text-stone-500 px-2.5 py-1 rounded-full">
+                            Oculta da Home
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Foto da Avaliação e Detalhes da Peça */}
+                    <div className="flex gap-4 mb-4">
+                      <div className="relative w-28 h-32 rounded-xl overflow-hidden bg-stone-100 shrink-0 border border-stone-200 shadow-xs">
+                        <Image
+                          src={rev.photoUrl}
+                          alt={`Foto enviada por ${rev.customerName}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 block mb-0.5">
+                          Peça Avaliada:
+                        </span>
+                        <p className="text-xs font-bold text-[#2E2620] mb-2 font-mono">
+                          {rev.productName}
+                        </p>
+                        {/* Estrelas */}
+                        <div className="flex items-center gap-1 mb-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < rev.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-stone-300"
+                              }`}
+                            />
+                          ))}
+                          <span className="text-xs font-mono font-bold text-stone-700 ml-1">
+                            {rev.rating}.0
+                          </span>
+                        </div>
+                        <p className="text-stone-700 text-xs italic leading-relaxed font-sans bg-[#FAF7F2] p-3 rounded-lg border border-[#E8E1D5]">
+                          &ldquo;{rev.comment}&rdquo;
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ações de Curadoria */}
+                  <div className="pt-4 border-t border-[#E8E1D5] flex items-center justify-between gap-3 font-mono text-xs">
+                    <Button
+                      onClick={() => handleToggleFeatured(rev.id, rev.featuredOnHome)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 h-auto text-xs font-mono ${
+                        rev.featuredOnHome
+                          ? "bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300"
+                          : "bg-[#1E3524] hover:bg-[#152519] text-white"
+                      }`}
+                    >
+                      {rev.featuredOnHome ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" />
+                          <span>Remover do Destaque da Home</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>★ Destacar no Final da Home</span>
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteReview(rev.id)}
+                      className="text-stone-400 hover:text-red-600 hover:bg-red-50 p-2"
+                      title="Excluir avaliação"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

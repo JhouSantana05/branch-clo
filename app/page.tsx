@@ -4,6 +4,7 @@ import Link from "next/link";
 import { OFFICIAL_PRODUCTS } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 import { CheckCircle2, ArrowRight } from "lucide-react";
+import { HomeFeaturedReviews } from "@/components/home-featured-reviews";
 
 export default function HomePage() {
   const featuredProducts = OFFICIAL_PRODUCTS.slice(0, 4);
@@ -429,6 +430,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 5. AVALIAÇÕES EM DESTAQUE SELECIONADAS PELO LOJISTA (No Final da Home) */}
+      <HomeFeaturedReviews />
     </div>
   );
 }
