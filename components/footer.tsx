@@ -102,6 +102,30 @@ export function Footer() {
           </Link>
         </div>
       </div>
+
+      {/* Barra Inferior Oficial: Direitos & Assinatura de Criação JS Web & Business */}
+      <div className="border-t border-[#E8E1D5] bg-[#F2ECE2] py-4 px-4 sm:px-6 lg:px-8 text-center sm:text-left">
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-stone-600">
+          <div>
+            <span>&copy; {new Date().getFullYear()} <strong>BRANCH CLO.</strong> Todos os direitos reservados &bull; The Vine Collection (João 15:5)</span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 text-stone-700">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-stone-500">Desenvolvimento & Criação:</span>
+            <a
+              href="https://wa.me/5511954532927?text=Ol%C3%A1!%20Vi%20o%20site%20da%20Branch%20Clo%20desenvolvido%20pela%20JS%20Web%20%26%20Business%20e%20gostaria%20de%20um%20or%C3%A7amento."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-bold text-[#1E3524] hover:text-[#152519] bg-[#E5DDCF] hover:bg-[#DDD3C2] px-2.5 py-1 rounded transition-colors shadow-xs"
+              title="Falar com JS Web & Business no WhatsApp"
+            >
+              <span className="font-bold tracking-tight">JS Web & Business</span>
+              <span className="text-stone-400 font-normal">&bull;</span>
+              <span className="text-[11px] font-mono text-stone-700">(11) 95453-2927</span>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
   );
 }

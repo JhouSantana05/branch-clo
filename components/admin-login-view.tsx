@@ -138,6 +138,21 @@ export function AdminLoginView() {
           </div>
         </form>
       </div>
+
+      {/* Assinatura JS Web & Business */}
+      <div className="mt-8 text-center text-xs font-mono text-stone-500">
+        <p>
+          Desenvolvido por{" "}
+          <a
+            href="https://wa.me/5511954532927?text=Ol%C3%A1!%20Preciso%20de%20suporte%20no%20sistema%20da%20Branch%20Clo."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-[#1E3524] hover:underline"
+          >
+            JS Web &amp; Business &bull; (11) 95453-2927
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
