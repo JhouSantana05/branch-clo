@@ -36,8 +36,8 @@ export function Header() {
   return (
     <>
       {/* 1. FRASE EM CIMA (Top Announcement Bar Oficial) */}
-      <div className="bg-[#ECE5DA] border-b border-[#DFD6C7] text-[#4A3E34] py-2 px-4 text-center text-[10px] sm:text-xs font-mono tracking-widest uppercase font-medium">
-        <span>MAIS QUE ROUPA. UM LEMBRETE DIÁRIO. | THE VINE COLLECTION | FRETE GRÁTIS ACIMA DE R$ 399</span>
+      <div className="bg-[#ECE5DA] border-b border-[#DFD6C7] text-[#4A3E34] py-2 px-3 text-center text-[10px] sm:text-xs font-mono tracking-normal sm:tracking-widest uppercase font-medium w-full max-w-full overflow-hidden">
+        <span className="inline-block max-w-full">MAIS QUE ROUPA. UM LEMBRETE DIÁRIO. | THE VINE COLLECTION | FRETE GRÁTIS ACIMA DE R$ 399</span>
       </div>
 
       {/* 2. HEADER EM 3 COLUNAS (Inspirado no Layout Tecovas com Logo Central) */}

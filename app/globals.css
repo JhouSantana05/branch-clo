@@ -41,6 +41,12 @@
   * {
     @apply border-border;
   }
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
   body {
     @apply bg-background text-foreground antialiased selection:bg-stone-300 selection:text-stone-900;
     background-color: #FAF7F2;

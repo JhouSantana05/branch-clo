@@ -5,7 +5,7 @@ import { ShieldCheck, Truck, RefreshCw, CreditCard } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#E8E1D5] bg-[#FAF7F2] text-[#2E2620] font-mono">
+    <footer className="w-full max-w-full overflow-hidden border-t border-[#E8E1D5] bg-[#FAF7F2] text-[#2E2620] font-mono">
       {/* Selos de Benefício */}
       <div className="border-b border-[#E8E1D5] bg-[#F5EFE6] py-6 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -56,7 +56,7 @@ export function Footer() {
         </div>
 
         {/* Coleções (4 cols) */}
-        <div className="md:col-span-4 flex flex-col gap-2.5">
+        <div className="md:col-span-4 flex flex-col items-center md:items-start text-center md:text-left gap-2.5">
           <span className="text-[11px] font-bold uppercase tracking-widest text-[#2E2620] mb-1">
             Coleções
           </span>
@@ -81,7 +81,7 @@ export function Footer() {
         </div>
 
         {/* Institucional & Suporte (3 cols) */}
-        <div className="md:col-span-3 flex flex-col gap-2.5">
+        <div className="md:col-span-3 flex flex-col items-center md:items-start text-center md:text-left gap-2.5">
           <span className="text-[11px] font-bold uppercase tracking-widest text-[#2E2620] mb-1">
             Ajuda & Rastreio
           </span>

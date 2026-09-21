@@ -32,13 +32,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="scroll-smooth">
+    <html lang="pt-BR" className="scroll-smooth overflow-x-hidden">
       <body
-        className={`${inter.variable} ${spaceMono.variable} min-h-screen bg-[#FAF7F2] text-[#2E2620] flex flex-col font-sans antialiased`}
+        className={`${inter.variable} ${spaceMono.variable} min-h-screen bg-[#FAF7F2] text-[#2E2620] flex flex-col font-sans antialiased overflow-x-hidden w-full max-w-full`}
       >
         <AuthProvider>
           <Header />
-          <div className="flex-1 flex flex-col">{children}</div>
+          <div className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden">{children}</div>
           <Footer />
           <Toaster position="bottom-right" richColors />
         </AuthProvider>
