@@ -7,7 +7,13 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 import { HomeFeaturedReviews } from "@/components/home-featured-reviews";
 
 export default function HomePage() {
-  const featuredProducts = OFFICIAL_PRODUCTS.slice(0, 4);
+  // Destaques intencionais da coleção: estampas Adultas/Teens nas primeiras posições e Linha Kids agrupada com propósito
+  const featuredProducts = [
+    OFFICIAL_PRODUCTS.find((p) => p.slug === "the-vine-joao-15-5-adulto") || OFFICIAL_PRODUCTS[0],
+    OFFICIAL_PRODUCTS.find((p) => p.slug === "mustard-seed-mateus-17-20-adulto") || OFFICIAL_PRODUCTS[1],
+    OFFICIAL_PRODUCTS.find((p) => p.slug === "o-chamado-juizes-7-7-teens") || OFFICIAL_PRODUCTS[2],
+    OFFICIAL_PRODUCTS.find((p) => p.slug === "eu-sou-cuidado-por-ele-salmo-23-1-kids") || OFFICIAL_PRODUCTS[3],
+  ];
 
   return (
     <div className="flex flex-col">
@@ -26,7 +32,7 @@ export default function HomePage() {
           <div className="absolute inset-0 mx-auto flex max-w-7xl items-center px-6 sm:px-10 lg:px-12">
             <div className="max-w-xl text-left">
               <span className="inline-block mb-3 text-xs font-mono uppercase tracking-[0.3em] text-[#D2C5B3]">
-                THE VINE COLLECTION &bull; JOÃO 15:5
+                THE VINE COLLECTION • JOÃO 15:5
               </span>
 
               <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tight text-white leading-tight">
@@ -35,21 +41,21 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-4 text-sm sm:text-base text-stone-200 leading-relaxed font-light">
-                Malha Suedine Premium 205g/m² 100% algodão com gola ribana 3cm, logo em silk emborrachado e estampa inteira nas costas. Coleções pensadas para toda a família.
+                Malha Suedine Premium 205g em 100% algodão nobre. Acabamento estruturado com toque aveludado e mensagens concebidas para expressar sua convicção com excelência.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/masculino"
+                  href="#colecao"
                   className="inline-block border border-white/30 bg-[#1E3524] hover:bg-[#142418] px-8 py-3.5 text-xs font-mono font-semibold uppercase tracking-widest text-white shadow-md transition-all duration-200"
                 >
-                  VER MASCULINO
+                  EXPLORAR COLEÇÃO
                 </Link>
                 <Link
-                  href="/infantil"
+                  href="#kids"
                   className="inline-block border border-white/60 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-7 py-3.5 text-xs font-mono font-semibold uppercase tracking-widest text-white transition-all duration-200"
                 >
-                  LINHA INFANTIL
+                  LINHA KIDS &amp; FAMÍLIA
                 </Link>
               </div>
             </div>
@@ -147,7 +153,7 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5">
                 <span className="block text-[10px] font-mono text-[#D2C5B3] uppercase tracking-widest">
-                  R$ 79,90
+                  Para as pequenas sementes
                 </span>
                 <span className="text-sm sm:text-base font-mono uppercase tracking-widest text-white font-bold flex items-center justify-between">
                   INFANTIL <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -164,7 +170,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-12">
             <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-[#8C7A68]">
-              TABELA DE PREÇOS OFICIAL
+              VALORES &amp; DISPONIBILIDADE
             </h2>
             <p className="text-2xl sm:text-3xl font-serif text-[#2E2620] mt-1 italic">
               Mais que roupa. Um lembrete diário.
@@ -199,15 +205,15 @@ export default function HomePage() {
               <div className="space-y-2 text-xs text-[#52463C] font-mono mb-6">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Suedine Premium 205G (100% Algodão)</span>
+                  <span>Toque Nobre Suedine 205g</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Logo Silk Emborrachado 3,5 cm</span>
+                  <span>Gola Estruturada 3 cm &amp; Etiqueta Couro</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Gola Ribana 3 cm & Etiqueta Couro</span>
+                  <span>Algodão Respirável 100% Nobre</span>
                 </div>
               </div>
 
@@ -253,15 +259,15 @@ export default function HomePage() {
               <div className="space-y-2 text-xs text-[#52463C] font-mono mb-6">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Suedine Premium 205G Slim</span>
+                  <span>Toque Nobre Suedine &amp; Modelagem Slim</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Estampa Juízes 7:7 O Chamado</span>
+                  <span>Gola Estruturada &amp; Estampa Juízes 7:7</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Tamanhos 12 &bull; 14 &bull; 16 &bull; PP</span>
+                  <span>Algodão Respirável &bull; Tam 12 a PP</span>
                 </div>
               </div>
 
@@ -274,7 +280,7 @@ export default function HomePage() {
             </div>
 
             {/* LINHA KIDS */}
-            <div className="rounded-sm border border-stone-300/80 bg-[#FDFCF9] p-7 shadow-sm hover:shadow-md transition-shadow">
+            <div id="kids" className="rounded-sm border border-stone-300/80 bg-[#FDFCF9] p-7 shadow-sm hover:shadow-md transition-shadow scroll-mt-24">
               <div className="text-center pb-5 border-b border-stone-200">
                 <span className="text-[10px] font-mono uppercase tracking-widest text-[#7E7265]">
                   LINHA
@@ -299,15 +305,15 @@ export default function HomePage() {
               <div className="space-y-2 text-xs text-[#52463C] font-mono mb-6">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Suedine Macio 205G Antialérgico</span>
+                  <span>Toque Nobre Suedine Ultra Macio</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Histórias Bíblicas Infantis</span>
+                  <span>Gola Estruturada &amp; Histórias Bíblicas</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#1E3524]" />
-                  <span>Tamanhos 2 a 10 anos</span>
+                  <span>Algodão Respirável Antialérgico (2 a 10 anos)</span>
                 </div>
               </div>
 
@@ -324,14 +330,14 @@ export default function HomePage() {
       </section>
 
       {/* 4. DESTAQUES DO CATÁLOGO GERAL */}
-      <section className="py-14 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full">
+      <section id="colecao" className="py-14 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full scroll-mt-16">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b border-stone-200 pb-5">
           <div>
             <span className="text-[11px] font-mono uppercase tracking-widest text-[#7E7265]">
               EM DESTAQUE
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-[#2E2620] mt-1">
-              Coleção Autorizada Branch Clo
+              Destaques da Coleção
             </h2>
           </div>
 
@@ -372,7 +378,7 @@ export default function HomePage() {
               </div>
               <p className="text-[11px] text-[#7E7265] mt-1 font-mono">
                 100% Algodão • 205g/m² <br />
-                Rendimento 2,60
+                Toque aveludado &amp; caimento denso
               </p>
             </div>
 
