@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,11 +104,11 @@ export function ProductCard({ product }: { product: ProductData }) {
   return (
     <div className="group relative flex flex-col rounded-sm border border-stone-200/90 bg-[#FDFCF9] shadow-sm transition-all duration-300 hover:shadow-md hover:border-stone-300">
       {/* Imagem com fundo em linho quente e hover flip */}
-      <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-[#F3EDE3] cursor-pointer"
+      <Link
+        href={`/produtos/${product.slug}`}
+        className="relative aspect-[3/4] w-full overflow-hidden bg-[#F3EDE3] block"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => setQuickViewOpen(true)}
       >
         <Image
           src={isHovered ? secondaryImage.url : primaryImage.url}
@@ -129,13 +130,21 @@ export function ProductCard({ product }: { product: ProductData }) {
           )}
         </div>
 
-        {/* Quick View Hover */}
+        {/* Quick View Trigger Button */}
         <div className="absolute inset-0 flex items-center justify-center bg-[#2E2620]/25 backdrop-blur-[2px] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <span className="flex items-center gap-2 rounded-sm border border-stone-200 bg-[#FAF7F2]/95 px-4 py-2 text-[11px] font-mono tracking-widest text-[#2E2620] shadow-sm uppercase">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setQuickViewOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-sm border border-stone-200 bg-[#FAF7F2]/95 px-4 py-2 text-[11px] font-mono tracking-widest text-[#2E2620] shadow-sm uppercase hover:bg-white transition-colors"
+          >
             <Eye className="h-3.5 w-3.5 text-[#7E7265]" /> Olhar Rápido
-          </span>
+          </button>
         </div>
-      </div>
+      </Link>
 
       {/* Detalhes do Produto */}
       <div className="flex flex-1 flex-col p-5">
@@ -181,10 +190,12 @@ export function ProductCard({ product }: { product: ProductData }) {
           </div>
         )}
 
-        {/* Título */}
-        <h3 className="text-sm font-semibold tracking-wide uppercase text-[#2E2620] leading-snug">
-          {product.name}
-        </h3>
+        {/* Título com Link */}
+        <Link href={`/produtos/${product.slug}`} className="group/title">
+          <h3 className="text-sm font-semibold tracking-wide uppercase text-[#2E2620] leading-snug group-hover/title:text-[#7E7265] transition-colors">
+            {product.name}
+          </h3>
+        </Link>
 
         {/* Preço */}
         <div className="mt-2 flex items-baseline gap-2">
