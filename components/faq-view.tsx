@@ -47,9 +47,9 @@ const FAQ_DATA: FAQItem[] = [
   {
     id: "faq-4",
     category: "pagamento",
-    question: "Como funciona o desconto de 5% no PIX?",
+    question: "Como funciona o pagamento via PIX e cupons de desconto?",
     answer:
-      "Todos os pedidos pagos via PIX recebem automaticamente 5% de desconto no valor total dos produtos. Na tela de checkout, geramos um QR Code dinâmico e o código Copia e Cola para você efetuar o pagamento diretamente no aplicativo do seu banco com liquidação imediata.",
+      "Todos os pedidos são processados com agilidade e segurança via PIX instantâneo oficial. Na tela de checkout, geramos um QR Code dinâmico e o código Copia e Cola. Além disso, você pode aplicar cupons promocionais cadastrados pela loja diretamente no carrinho para obter descontos em porcentagem ou valores fixos.",
   },
   {
     id: "faq-5",

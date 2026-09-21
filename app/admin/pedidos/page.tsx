@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AdminOrdersView } from "@/components/admin-orders-view";
 
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function AdminPedidosPage() {
   return (
     <main className="min-h-screen bg-[#FAF7F2]">
-      <AdminOrdersView />
+      <Suspense fallback={<div className="p-8 text-center font-mono text-xs text-stone-500">Carregando painel...</div>}>
+        <AdminOrdersView />
+      </Suspense>
     </main>
   );
 }

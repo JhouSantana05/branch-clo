@@ -16,8 +16,8 @@ export function Footer() {
           </div>
           <div className="flex flex-col items-center gap-1">
             <CreditCard className="w-5 h-5 text-[#1E3524]" />
-            <span className="text-xs font-bold uppercase tracking-wider">PIX 5% OFF</span>
-            <span className="text-[11px] text-stone-500">Desconto instantâneo à vista</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Pagamento PIX</span>
+            <span className="text-[11px] text-stone-500">Aprovação imediata do pedido</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <RefreshCw className="w-5 h-5 text-[#1E3524]" />

@@ -397,6 +397,11 @@ export function AdminProductsView() {
               Ver Pedidos Realizados
             </Button>
           </Link>
+          <Link href="/admin/cupons">
+            <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6] text-xs font-mono">
+              Gerador de Cupons
+            </Button>
+          </Link>
           <Link href="/">
             <Button variant="outline" size="sm" className="border-[#2E2620]/20 text-[#2E2620] hover:bg-[#F5EFE6] text-xs font-mono">
               Loja Online

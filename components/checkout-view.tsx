@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { fetchAddressByCep } from "@/lib/viacep";
+import { validateCoupon } from "@/lib/coupons";
 
 export function CheckoutView() {
   const searchParams = useSearchParams();
@@ -171,52 +172,51 @@ export function CheckoutView() {
   const [generatedOrderNumber, setGeneratedOrderNumber] = useState("");
   const [countdown, setCountdown] = useState(15 * 60); // 15 minutos em segundos
 
-  // Cupom de Desconto
+  // Cupom de Desconto Dinâmico (Gerenciado pelo Lojista)
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
-    type: "PERCENT" | "FIXED" | "FREE_SHIPPING";
+    type: "PERCENT" | "FIXED";
     value: number;
+    name?: string;
   } | null>(null);
 
   // Cálculos
   const subtotal = unitPrice * quantity;
   const isFreeShipping = subtotal >= 399;
-  const standardShippingCost = isFreeShipping
+  const shippingCost = isFreeShipping
     ? 0
     : shippingMethod === "PAC"
     ? 14.9
     : 22.9;
 
-  const shippingCost = appliedCoupon?.type === "FREE_SHIPPING" ? 0 : standardShippingCost;
-
   const couponDiscount = appliedCoupon
     ? appliedCoupon.type === "PERCENT"
-      ? subtotal * appliedCoupon.value
-      : appliedCoupon.type === "FIXED"
-      ? Math.min(subtotal, appliedCoupon.value)
-      : 0
+      ? (subtotal * appliedCoupon.value) / 100
+      : Math.min(subtotal, appliedCoupon.value)
     : 0;
 
   const subtotalAfterCoupon = Math.max(0, subtotal - couponDiscount);
-  const pixDiscount = paymentMethod === "PIX" ? subtotalAfterCoupon * 0.05 : 0;
-  const totalAmount = subtotalAfterCoupon + shippingCost - pixDiscount;
+  const totalAmount = subtotalAfterCoupon + shippingCost;
 
   const handleApplyCoupon = () => {
     const code = couponInput.trim().toUpperCase();
-    if (!code) return;
+    if (!code) {
+      toast.error("Digite o código do cupom.");
+      return;
+    }
 
-    if (code === "THEVINE10") {
-      setAppliedCoupon({ code, type: "PERCENT", value: 0.1 });
-      toast.success("Cupom THEVINE10 aplicado! 10% de desconto adicional.");
-    } else if (code === "PRIMEIRACOMPRA") {
-      setAppliedCoupon({ code, type: "FIXED", value: 20.0 });
-      toast.success("Cupom PRIMEIRACOMPRA aplicado! R$ 20,00 de desconto.");
-    } else if (code === "FRETEGRATIS") {
-      setAppliedCoupon({ code, type: "FREE_SHIPPING", value: 0 });
-      toast.success("Cupom FRETEGRATIS aplicado! Frete 100% grátis.");
+    const res = validateCoupon(code, subtotal);
+    if (res.valid && res.coupon) {
+      setAppliedCoupon({
+        code: res.coupon.code,
+        type: res.coupon.discountType,
+        value: res.coupon.discountValue,
+        name: res.coupon.name,
+      });
+      toast.success(res.message);
     } else {
-      toast.error("Cupom inválido ou expirado");
+      toast.error(res.message || "Cupom inválido ou expirado.");
     }
   };
 
@@ -319,7 +319,7 @@ export function CheckoutView() {
       shippingCost,
       paymentMethod,
       subtotal,
-      discount: couponDiscount + pixDiscount,
+      discount: couponDiscount,
       total: totalAmount,
       status: paymentMethod === "PIX" ? "AGUARDANDO_PIX" : "PAGO",
       pixCode: simulatedPixCode,
@@ -370,7 +370,7 @@ export function CheckoutView() {
         `*Itens:* ${quantity}x ${product.name} (${colorParam} - Tam: ${sizeParam})\n` +
         `*Cupom:* ${appliedCoupon ? `${appliedCoupon.code} (-${formatCurrency(couponDiscount)})` : "Nenhum"}\n` +
         `*Frete:* ${shippingMethod} (${shippingCost === 0 ? "Grátis" : formatCurrency(shippingCost)})\n` +
-        `*Forma de Pagamento:* ${paymentMethod === "PIX" ? "PIX (5% OFF)" : "Cartão de Crédito"}\n` +
+        `*Forma de Pagamento:* PIX Instantâneo Oficial\n` +
         `*Valor Total:* ${formatCurrency(totalAmount)}\n\n` +
         `*Endereço de Entrega:* ${street}, Nº ${number} ${complement ? "- " + complement : ""}, ${neighborhood}, ${city} - ${state}, CEP ${cep}\n\n` +
         `Envio o comprovante de pagamento anexo para início da separação no estoque.`
@@ -419,7 +419,7 @@ export function CheckoutView() {
               {formatCurrency(totalAmount)}
             </div>
             <span className="text-[11px] font-mono text-[#7E7265]">
-              (Valor com 5% de desconto exclusivo no PIX)
+              (Pagamento seguro via PIX Instantâneo Oficial)
             </span>
 
             {/* Código Copia e Cola */}
@@ -932,7 +932,7 @@ export function CheckoutView() {
                   ETAPA 3 DE 3
                 </span>
                 <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-sm bg-[#1E3524] text-white font-bold">
-                  Exclusivo à Vista (-5% OFF)
+                  Pagamento Oficial
                 </span>
               </div>
               <h2 className="text-base font-bold uppercase tracking-wide text-[#2E2620] mb-4">
@@ -949,23 +949,23 @@ export function CheckoutView() {
                       <div className="text-xs font-bold font-mono uppercase flex items-center gap-2">
                         <span>PIX Instantâneo Oficial</span>
                         <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-[#1E3524] text-white font-bold">
-                          -5% OFF
+                          Ativo
                         </span>
                       </div>
                       <div className="text-[11px] text-[#3D5239] font-mono mt-0.5">
-                        Aprovação imediata &bull; QR Code dinâmico e código Copia e Cola
+                        Aprovação imediata &bull; QR Code dinâmico e chave Copia e Cola
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-[#D5E4D5] flex items-center justify-between text-[11px] font-mono text-[#24422B]">
                   <span>Venda exclusiva via PIX</span>
-                  <span className="font-bold text-[#1E3524]">5% de desconto aplicado no pedido</span>
+                  <span className="font-bold text-[#1E3524]">Aceita cupom promocional</span>
                 </div>
               </div>
 
               <p className="text-[11px] font-mono text-stone-500 mt-3">
-                * No momento, as compras na loja são realizadas exclusivamente via PIX para garantir despacho prioritário e o melhor valor com 5% de desconto à vista.
+                * As compras são processadas exclusivamente via PIX para garantir despacho prioritário. Insira seu cupom de desconto ao lado para aplicar reduções no valor final.
               </p>
             </div>
 
@@ -1108,12 +1108,6 @@ export function CheckoutView() {
                   <span>Frete ({shippingMethod}):</span>
                   <span>{shippingCost === 0 ? "GRÁTIS" : formatCurrency(shippingCost)}</span>
                 </div>
-                {paymentMethod === "PIX" && (
-                  <div className="flex justify-between text-[#1E3524] font-semibold">
-                    <span>Desconto PIX (5%):</span>
-                    <span>- {formatCurrency(pixDiscount)}</span>
-                  </div>
-                )}
               </div>
 
               {/* Total Final */}
@@ -1125,15 +1119,9 @@ export function CheckoutView() {
                   <div className="text-2xl font-bold font-mono text-[#1E3524]">
                     {formatCurrency(totalAmount)}
                   </div>
-                  {paymentMethod === "PIX" ? (
-                    <span className="text-[10px] font-mono text-[#586E53]">
-                      no PIX à vista
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-mono text-[#7E7265]">
-                      ou até 3x de {formatCurrency(totalAmount / 3)} sem juros
-                    </span>
-                  )}
+                  <span className="text-[10px] font-mono text-[#586E53]">
+                    Pagamento via PIX Oficial
+                  </span>
                 </div>
               </div>
 

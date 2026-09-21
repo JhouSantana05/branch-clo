@@ -190,7 +190,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 </div>
                 <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-mono text-[#4A6348] bg-[#EBF2EB] px-2.5 py-1 rounded-sm">
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>5% de desconto à vista no PIX</span>
+                  <span>Pagamento via PIX &bull; Aceita cupom de desconto</span>
                 </div>
               </div>
 
@@ -296,7 +296,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   className="w-full h-12 bg-[#1E3524] hover:bg-[#142418] text-white font-mono uppercase tracking-widest text-xs font-bold rounded-sm gap-2 shadow-md flex items-center justify-center transition-all duration-200"
                 >
                   <Sparkles className="h-4 w-4" />
-                  Comprar Agora (5% OFF no PIX)
+                  Comprar Agora via PIX
                 </Link>
 
                 {/* Adicionar à Sacola */}
