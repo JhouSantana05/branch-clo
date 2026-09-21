@@ -30,6 +30,7 @@ export interface OrderData {
   discount: number;
   total: number;
   status: "AGUARDANDO_PIX" | "PAGO" | "EM_SEPARACAO" | "ENVIADO" | "ENTREGUE";
+  trackingCode?: string;
   pixCode?: string;
   createdAt: string;
   items: OrderItemData[];
@@ -94,6 +95,7 @@ export const INITIAL_ORDERS: OrderData[] = [
     discount: 20.98,
     total: 398.72,
     status: "ENVIADO",
+    trackingCode: "NL829374612BR",
     createdAt: "2026-09-19T10:15:00Z",
     items: [
       {

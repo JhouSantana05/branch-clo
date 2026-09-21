@@ -99,6 +99,13 @@ export function Header() {
             </button>
 
             <Link
+              href="/rastreio"
+              className="hidden md:inline-block text-xs font-mono uppercase tracking-widest font-medium text-[#2E2620] hover:text-[#1E3524] transition-colors"
+            >
+              RASTREIO
+            </Link>
+
+            <Link
               href="/admin/pedidos"
               className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest font-medium text-[#2E2620] hover:text-[#7E7265] transition-colors"
             >
@@ -288,6 +295,27 @@ export function Header() {
 
               {/* Tabela de Preços & Atalhos */}
               <div className="pt-4 border-t border-stone-200 space-y-2">
+                <Link
+                  href="/rastreio"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 text-xs font-mono uppercase text-[#7E7265] hover:text-[#1E3524] font-medium"
+                >
+                  RASTREAR MEU PEDIDO
+                </Link>
+                <Link
+                  href="/sobre"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 text-xs font-mono uppercase text-[#7E7265] hover:text-[#1E3524]"
+                >
+                  O PROPÓSITO & MANIFESTO
+                </Link>
+                <Link
+                  href="/ajuda"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 text-xs font-mono uppercase text-[#7E7265] hover:text-[#1E3524]"
+                >
+                  CENTRAL DE AJUDA & FAQ
+                </Link>
                 <Link
                   href="/#tabela"
                   onClick={() => setMobileMenuOpen(false)}

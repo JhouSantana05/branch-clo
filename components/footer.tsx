@@ -1,12 +1,41 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ShieldCheck, Truck, RefreshCw, CreditCard } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-stone-200 bg-[#FAF7F2] py-14 px-4 sm:px-6 lg:px-8 text-xs font-mono">
-      <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-8">
-        <div className="flex flex-col items-center md:items-start gap-2">
+    <footer className="border-t border-[#E8E1D5] bg-[#FAF7F2] text-[#2E2620] font-mono">
+      {/* Selos de Benefício */}
+      <div className="border-b border-[#E8E1D5] bg-[#F5EFE6] py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="flex flex-col items-center gap-1">
+            <Truck className="w-5 h-5 text-[#1E3524]" />
+            <span className="text-xs font-bold uppercase tracking-wider">Frete Grátis</span>
+            <span className="text-[11px] text-stone-500">Para compras acima de R$ 399</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <CreditCard className="w-5 h-5 text-[#1E3524]" />
+            <span className="text-xs font-bold uppercase tracking-wider">PIX 5% OFF</span>
+            <span className="text-[11px] text-stone-500">Desconto instantâneo à vista</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <RefreshCw className="w-5 h-5 text-[#1E3524]" />
+            <span className="text-xs font-bold uppercase tracking-wider">1ª Troca Grátis</span>
+            <span className="text-[11px] text-stone-500">Até 7 dias após o recebimento</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <ShieldCheck className="w-5 h-5 text-[#1E3524]" />
+            <span className="text-xs font-bold uppercase tracking-wider">Suedine 205g</span>
+            <span className="text-[11px] text-stone-500">100% algodão nobre aveludado</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Links */}
+      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 text-xs">
+        {/* Brand Column (5 cols) */}
+        <div className="md:col-span-5 flex flex-col items-start gap-3">
           <Link href="/">
             <div className="relative h-10 w-44">
               <Image
@@ -17,35 +46,59 @@ export function Footer() {
               />
             </div>
           </Link>
-          <span className="text-[#8C7A68] text-[11px]">
-            THE VINE COLLECTION &bull; ENRAIZADOS EM CRISTO. CONECTADOS AO PROPÓSITO.
-          </span>
-          <span className="text-[#A39280] text-[10px]">
+          <p className="text-[#8C7A68] text-[11px] leading-relaxed max-w-sm">
+            THE VINE COLLECTION &bull; Moda cristã autoral confeccionada em Suedine Premium 205g.
+            Enraizados em Cristo. Conectados ao Propósito.
+          </p>
+          <span className="text-[#A39280] text-[10px] mt-2">
             &copy; {new Date().getFullYear()} BRANCH CLO. Todos os direitos reservados.
           </span>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-[11px] uppercase tracking-wider text-[#6B5E52]">
-          <Link href="/masculino" className="hover:text-[#1E3524] transition-colors">
-            Masculino
+        {/* Coleções (4 cols) */}
+        <div className="md:col-span-4 flex flex-col gap-2.5">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#2E2620] mb-1">
+            Coleções
+          </span>
+          <Link href="/masculino" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Moda Masculina (The Vine & Mustard Seed)
           </Link>
-          <Link href="/feminino" className="hover:text-[#1E3524] transition-colors">
-            Feminino
+          <Link href="/feminino" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Moda Feminina (Modelagem Slim & Conforto)
           </Link>
-          <Link href="/teens" className="hover:text-[#1E3524] transition-colors">
-            Teens
+          <Link href="/teens" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Linha Teens (Juízes 7:7 — O Chamado)
           </Link>
-          <Link href="/infantil" className="hover:text-[#1E3524] transition-colors">
-            Infantil
+          <Link href="/infantil" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Linha Kids (Histórias Bíblicas)
           </Link>
-          <Link href="/acessorios" className="hover:text-[#1E3524] transition-colors">
-            Acessórios
+          <Link href="/acessorios" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Acessórios & Emblemas em Couro
           </Link>
-          <Link href="/#tabela" className="hover:text-[#1E3524] transition-colors font-semibold">
-            Tabela de Preços
+          <Link href="/#tabela" className="hover:text-[#1E3524] transition-colors font-medium text-stone-700">
+            Tabela Oficial de Preços
           </Link>
-          <Link href="/admin/pedidos" className="hover:text-[#1E3524] transition-colors opacity-70">
-            Painel Pedidos
+        </div>
+
+        {/* Institucional & Suporte (3 cols) */}
+        <div className="md:col-span-3 flex flex-col gap-2.5">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#2E2620] mb-1">
+            Ajuda & Rastreio
+          </span>
+          <Link href="/rastreio" className="hover:text-[#1E3524] transition-colors text-stone-600 font-semibold text-[#1E3524]">
+            Rastrear Meu Pedido
+          </Link>
+          <Link href="/sobre" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            O Propósito & Manifesto
+          </Link>
+          <Link href="/ajuda" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Dúvidas Frequentes (FAQ)
+          </Link>
+          <Link href="/checkout" className="hover:text-[#1E3524] transition-colors text-stone-600">
+            Checkout Seguro
+          </Link>
+          <Link href="/admin/pedidos" className="hover:text-[#1E3524] transition-colors text-stone-400 text-[10px] mt-2">
+            Área de Gestão / Backoffice
           </Link>
         </div>
       </div>
