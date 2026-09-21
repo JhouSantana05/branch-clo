@@ -951,9 +951,6 @@ export function LoginView() {
                 <span className="text-[10px] font-mono uppercase tracking-widest text-[#1E3524] bg-[#EAE3D2] px-2 py-0.5 rounded font-bold">
                   Avaliação da Compra
                 </span>
-                <span className="text-xs font-mono text-stone-500">
-                  {selectedReviewItem.orderNumber}
-                </span>
               </div>
 
               <h3 className="text-xl font-serif font-bold text-[#2E2620]">

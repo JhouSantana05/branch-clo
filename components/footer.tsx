@@ -35,14 +35,14 @@ export function Footer() {
       {/* Main Footer Links */}
       <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 text-xs">
         {/* Brand Column (5 cols) */}
-        <div className="md:col-span-5 flex flex-col items-start gap-3">
-          <Link href="/">
-            <div className="relative h-10 w-44">
+        <div className="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left gap-4">
+          <Link href="/" className="inline-flex justify-center md:justify-start">
+            <div className="relative h-20 w-52 sm:h-24 sm:w-60">
               <Image
                 src="/brand/logo.svg"
                 alt="BRANCH CLO."
                 fill
-                className="object-contain"
+                className="object-contain object-center md:object-left"
               />
             </div>
           </Link>
@@ -50,7 +50,7 @@ export function Footer() {
             THE VINE COLLECTION &bull; Moda cristã autoral confeccionada em Suedine Premium 205g.
             Enraizados em Cristo. Conectados ao Propósito.
           </p>
-          <span className="text-[#A39280] text-[10px] mt-2">
+          <span className="text-[#A39280] text-[10px]">
             &copy; {new Date().getFullYear()} BRANCH CLO. Todos os direitos reservados.
           </span>
         </div>

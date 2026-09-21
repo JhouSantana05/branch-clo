@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -121,7 +121,7 @@ export function HomeFeaturedReviews() {
                   </span>
                 </div>
                 <span className="text-[10px] text-[#1E3524] font-bold bg-[#EAE3D2] px-2 py-0.5 rounded">
-                  {rev.orderNumber}
+                  Compra Verificada
                 </span>
               </div>
             </div>

@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   Sparkles,
   QrCode,
-  CreditCard,
   Tag,
   X,
   User,
@@ -65,7 +64,7 @@ export function CheckoutView() {
   // Estado do Checkout
   const [quantity, setQuantity] = useState(1);
   const [shippingMethod, setShippingMethod] = useState<"PAC" | "SEDEX">("PAC");
-  const [paymentMethod, setPaymentMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
+  const paymentMethod = "PIX" as const;
 
   // Autenticação Obrigatória para Compras
   const {
@@ -401,68 +400,53 @@ export function CheckoutView() {
             </p>
           </div>
 
-          {/* Área do PIX */}
-          {paymentMethod === "PIX" ? (
-            <div className="py-8 text-center border-b border-stone-200">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EBF2EB] text-[#1E3524] rounded-sm text-xs font-mono font-semibold mb-4">
-                <Clock className="h-4 w-4" />
-                <span>Pague em até {formatTime(countdown)} para garantir a reserva</span>
-              </div>
+          {/* Área do PIX Oficial */}
+          <div className="py-8 text-center border-b border-stone-200">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EBF2EB] text-[#1E3524] rounded-sm text-xs font-mono font-semibold mb-4">
+              <Clock className="h-4 w-4" />
+              <span>Pague em até {formatTime(countdown)} para garantir a reserva</span>
+            </div>
 
-              {/* QR Code Simulado Elegante */}
-              <div className="mx-auto w-52 h-52 bg-white border-2 border-dashed border-stone-300 rounded-sm p-4 flex flex-col items-center justify-center shadow-inner my-4">
-                <QrCode className="h-32 w-32 text-[#2E2620]" />
-                <span className="text-[10px] font-mono text-[#7E7265] mt-2">
-                  Abra o app do seu banco e aponte a câmera
-                </span>
-              </div>
-
-              <div className="text-2xl font-bold font-mono text-[#1E3524] mt-3">
-                {formatCurrency(totalAmount)}
-              </div>
-              <span className="text-[11px] font-mono text-[#7E7265]">
-                (Valor com 5% de desconto exclusivo no PIX)
+            {/* QR Code Simulado Elegante */}
+            <div className="mx-auto w-52 h-52 bg-white border-2 border-dashed border-stone-300 rounded-sm p-4 flex flex-col items-center justify-center shadow-inner my-4">
+              <QrCode className="h-32 w-32 text-[#2E2620]" />
+              <span className="text-[10px] font-mono text-[#7E7265] mt-2">
+                Abra o app do seu banco e aponte a câmera
               </span>
+            </div>
 
-              {/* Código Copia e Cola */}
-              <div className="mt-6 max-w-md mx-auto">
-                <span className="text-xs font-mono uppercase tracking-wider text-[#7E7265] block mb-2 font-semibold">
-                  PIX COPIA E COLA:
-                </span>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={simulatedPixCode}
-                    className="flex-1 px-3 py-2 text-[11px] font-mono bg-stone-100 border border-stone-300 rounded-sm text-stone-600 truncate select-all"
-                  />
-                  <Button
-                    onClick={() => {
-                      navigator.clipboard.writeText(simulatedPixCode);
-                      toast.success("Chave PIX copiada para a área de transferência!");
-                    }}
-                    className="bg-[#2E2620] hover:bg-[#1C1713] text-white text-xs font-mono gap-1.5 rounded-sm shrink-0"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    Copiar
-                  </Button>
-                </div>
+            <div className="text-2xl font-bold font-mono text-[#1E3524] mt-3">
+              {formatCurrency(totalAmount)}
+            </div>
+            <span className="text-[11px] font-mono text-[#7E7265]">
+              (Valor com 5% de desconto exclusivo no PIX)
+            </span>
+
+            {/* Código Copia e Cola */}
+            <div className="mt-6 max-w-md mx-auto">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#7E7265] block mb-2 font-semibold">
+                PIX COPIA E COLA:
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={simulatedPixCode}
+                  className="flex-1 px-3 py-2 text-[11px] font-mono bg-stone-100 border border-stone-300 rounded-sm text-stone-600 truncate select-all"
+                />
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(simulatedPixCode);
+                    toast.success("Chave PIX copiada para a área de transferência!");
+                  }}
+                  className="bg-[#2E2620] hover:bg-[#1C1713] text-white text-xs font-mono gap-1.5 rounded-sm shrink-0"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Copiar
+                </Button>
               </div>
             </div>
-          ) : (
-            <div className="py-8 text-center border-b border-stone-200">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5EFE6] text-[#2E2620] rounded-sm text-xs font-mono font-semibold mb-4">
-                <CreditCard className="h-4 w-4" />
-                <span>Pagamento via Cartão de Crédito</span>
-              </div>
-              <div className="text-2xl font-bold font-mono text-[#2E2620] mt-2">
-                {formatCurrency(totalAmount)}
-              </div>
-              <p className="text-xs font-mono text-[#7E7265] mt-1">
-                Transação processada em ambiente 100% criptografado.
-              </p>
-            </div>
-          )}
+          </div>
 
           {/* Resumo do Pedido & Envio */}
           <div className="py-6 space-y-3 text-xs font-mono text-[#52463C] border-b border-stone-200">
@@ -943,66 +927,46 @@ export function CheckoutView() {
 
             {/* 3. FORMA DE PAGAMENTO */}
             <div className="bg-[#FDFCF9] border border-stone-200 p-6 rounded-sm shadow-xs">
-              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#8C7A68] block mb-1">
-                ETAPA 3 DE 3
-              </span>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#8C7A68] block">
+                  ETAPA 3 DE 3
+                </span>
+                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-sm bg-[#1E3524] text-white font-bold">
+                  Exclusivo à Vista (-5% OFF)
+                </span>
+              </div>
               <h2 className="text-base font-bold uppercase tracking-wide text-[#2E2620] mb-4">
                 Forma de Pagamento
               </h2>
 
-              <div className="space-y-3">
-                {/* Opção PIX */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("PIX")}
-                  className={`w-full flex items-center justify-between p-4 rounded-sm border text-left transition-all ${
-                    paymentMethod === "PIX"
-                      ? "border-[#1E3524] bg-[#EBF2EB] text-[#1E3524] shadow-xs"
-                      : "border-stone-200 bg-white text-[#2E2620]"
-                  }`}
-                >
+              <div className="p-4 rounded-sm border-2 border-[#1E3524] bg-[#EBF2EB] text-[#1E3524] shadow-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <QrCode className="h-5 w-5 text-[#1E3524]" />
+                    <div className="h-10 w-10 rounded-full bg-[#1E3524] text-white flex items-center justify-center shrink-0">
+                      <QrCode className="h-5 w-5" />
+                    </div>
                     <div>
-                      <div className="text-xs font-bold font-mono uppercase">
-                        PIX (QR Code & Copia e Cola)
+                      <div className="text-xs font-bold font-mono uppercase flex items-center gap-2">
+                        <span>PIX Instantâneo Oficial</span>
+                        <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-[#1E3524] text-white font-bold">
+                          -5% OFF
+                        </span>
                       </div>
-                      <div className="text-[11px] text-[#586E53] font-mono">
-                        Aprovação instantânea + 5% de desconto à vista
+                      <div className="text-[11px] text-[#3D5239] font-mono mt-0.5">
+                        Aprovação imediata &bull; QR Code dinâmico e código Copia e Cola
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-sm bg-[#1E3524] text-white font-bold">
-                    -5% OFF
-                  </span>
-                </button>
-
-                {/* Opção Cartão de Crédito */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("CREDIT_CARD")}
-                  className={`w-full flex items-center justify-between p-4 rounded-sm border text-left transition-all ${
-                    paymentMethod === "CREDIT_CARD"
-                      ? "border-[#1E3524] bg-[#EBF2EB] text-[#1E3524] shadow-xs"
-                      : "border-stone-200 bg-white text-[#2E2620]"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="h-5 w-5 text-[#2E2620]" />
-                    <div>
-                      <div className="text-xs font-bold font-mono uppercase">
-                        Cartão de Crédito
-                      </div>
-                      <div className="text-[11px] text-[#7E7265] font-mono">
-                        Em até 3x sem juros no checkout
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono uppercase text-[#7E7265]">
-                    Até 3x
-                  </span>
-                </button>
+                </div>
+                <div className="mt-3 pt-3 border-t border-[#D5E4D5] flex items-center justify-between text-[11px] font-mono text-[#24422B]">
+                  <span>Venda exclusiva via PIX</span>
+                  <span className="font-bold text-[#1E3524]">5% de desconto aplicado no pedido</span>
+                </div>
               </div>
+
+              <p className="text-[11px] font-mono text-stone-500 mt-3">
+                * No momento, as compras na loja são realizadas exclusivamente via PIX para garantir despacho prioritário e o melhor valor com 5% de desconto à vista.
+              </p>
             </div>
 
           </div>
