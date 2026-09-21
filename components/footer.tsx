@@ -97,9 +97,6 @@ export function Footer() {
           <Link href="/checkout" className="hover:text-[#1E3524] transition-colors text-stone-600">
             Checkout Seguro
           </Link>
-          <Link href="/admin/pedidos" className="hover:text-[#1E3524] transition-colors text-stone-400 text-[10px] mt-2">
-            Área de Gestão / Backoffice
-          </Link>
         </div>
       </div>
 

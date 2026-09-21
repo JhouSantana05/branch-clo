@@ -29,6 +29,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { fetchAddressByCep } from "@/lib/viacep";
 
 export function CheckoutView() {
   const searchParams = useSearchParams();
@@ -66,7 +67,15 @@ export function CheckoutView() {
   const [paymentMethod, setPaymentMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
 
   // Autenticação Obrigatória para Compras
-  const { customer, isCustomerAuthenticated, loginCustomer, registerCustomer, logoutCustomer } = useAuth();
+  const {
+    customer,
+    isCustomerAuthenticated,
+    unifiedLogin,
+    loginCustomer,
+    registerCustomer,
+    updateCustomerAddress,
+    logoutCustomer,
+  } = useAuth();
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -83,13 +92,32 @@ export function CheckoutView() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerCpf, setCustomerCpf] = useState("");
 
-  // Sincronizar dados do cliente logado
+  // Endereço (Preenchido automaticamente se o cliente tiver endereço cadastrado)
+  const [cep, setCep] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("São Paulo");
+  const [state, setState] = useState("SP");
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+
+  // Sincronizar dados e endereço do cliente logado
   useEffect(() => {
     if (customer) {
       setCustomerName(customer.name);
       setCustomerEmail(customer.email);
       setCustomerPhone(customer.phone);
       setCustomerCpf(customer.cpf);
+      if (customer.address) {
+        if (customer.address.cep) setCep(customer.address.cep);
+        if (customer.address.street) setStreet(customer.address.street);
+        if (customer.address.number) setNumber(customer.address.number);
+        if (customer.address.complement) setComplement(customer.address.complement);
+        if (customer.address.neighborhood) setNeighborhood(customer.address.neighborhood);
+        if (customer.address.city) setCity(customer.address.city);
+        if (customer.address.state) setState(customer.address.state);
+      }
     }
   }, [customer]);
 
@@ -99,11 +127,16 @@ export function CheckoutView() {
       toast.error("Preencha e-mail e senha.");
       return;
     }
-    const ok = loginCustomer(loginEmail, loginPassword);
-    if (ok) {
-      toast.success("Login realizado com sucesso!");
+    const res = unifiedLogin(loginEmail, loginPassword);
+    if (res.success) {
+      if (res.role === "ADMIN") {
+        toast.success("Acesso administrativo! Redirecionando para o painel de gestão...");
+        window.location.href = "/admin/pedidos";
+      } else {
+        toast.success("Login realizado com sucesso! Seus dados foram carregados.");
+      }
     } else {
-      toast.error("Falha ao autenticar. Tente novamente.");
+      toast.error(res.message || "Falha ao autenticar. Tente novamente.");
     }
   };
 
@@ -113,22 +146,25 @@ export function CheckoutView() {
       toast.error("Por favor, preencha os campos obrigatórios.");
       return;
     }
-    const ok = registerCustomer(regName, regEmail, regPhone, regCpf, regPassword);
+    const addressData = street.trim()
+      ? {
+          cep: cep.trim(),
+          street: street.trim(),
+          number: number.trim() || "S/N",
+          complement: complement.trim(),
+          neighborhood: neighborhood.trim(),
+          city: city.trim(),
+          state: state.trim(),
+        }
+      : undefined;
+
+    const ok = registerCustomer(regName, regEmail, regPhone, regCpf, regPassword, addressData);
     if (ok) {
       toast.success("Conta criada com sucesso! Você já está autenticado para comprar.");
     } else {
       toast.error("Falha ao registrar conta.");
     }
   };
-
-  // Endereço
-  const [cep, setCep] = useState("");
-  const [street, setStreet] = useState("");
-  const [number, setNumber] = useState("");
-  const [complement, setComplement] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
-  const [city, setCity] = useState("São Paulo");
-  const [state, setState] = useState("SP");
 
   // Pedido Criado
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -190,16 +226,32 @@ export function CheckoutView() {
     toast.info("Cupom removido.");
   };
 
-  // Simulação de busca de CEP
-  const handleCepLookup = () => {
-    if (cep.replace(/\D/g, "").length === 8) {
-      toast.success("Endereço localizado via CEP!");
-      setStreet("Rua das Oliveiras");
-      setNeighborhood("Jardins");
-      setCity("São Paulo");
-      setState("SP");
-    } else {
+  // Busca Real de CEP via API ViaCEP
+  const handleCepLookup = async (inputCep?: string) => {
+    const targetCep = (inputCep || cep).replace(/\D/g, "");
+    if (targetCep.length !== 8) {
       toast.error("Digite um CEP válido com 8 dígitos");
+      return;
+    }
+
+    setIsSearchingCep(true);
+    toast.loading("Buscando endereço oficial...", { id: "checkout-cep" });
+    const address = await fetchAddressByCep(targetCep);
+    setIsSearchingCep(false);
+
+    if (address) {
+      setStreet(address.street);
+      setNeighborhood(address.neighborhood);
+      setCity(address.city);
+      setState(address.state);
+      setCep(address.cep);
+      toast.success(`Endereço localizado: ${address.street}, ${address.city} - ${address.state}`, {
+        id: "checkout-cep",
+      });
+    } else {
+      toast.error("CEP não encontrado. Por favor, digite o endereço manualmente.", {
+        id: "checkout-cep",
+      });
     }
   };
 
@@ -229,6 +281,19 @@ export function CheckoutView() {
     if (!customerName || !customerPhone || !street || !number) {
       toast.error("Por favor, preencha os campos obrigatórios de entrega");
       return;
+    }
+
+    // Salvar o endereço no cadastro do cliente logado para compras futuras
+    if (customer && street) {
+      updateCustomerAddress({
+        cep,
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+      });
     }
 
     const orderNum = `#BC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -695,7 +760,12 @@ export function CheckoutView() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
                 <div>
-                  <label className="block text-[#7E7265] mb-1">CEP *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#7E7265]">CEP *</label>
+                    {customer?.address && (
+                      <span className="text-[9px] text-[#1E3524] font-semibold">Salvo no Perfil</span>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -703,15 +773,22 @@ export function CheckoutView() {
                       placeholder="00000-000"
                       maxLength={9}
                       value={cep}
-                      onChange={(e) => setCep(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCep(val);
+                        if (val.replace(/\D/g, "").length === 8) {
+                          handleCepLookup(val);
+                        }
+                      }}
                       className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-sm focus:outline-none focus:border-[#2E2620]"
                     />
                     <button
                       type="button"
-                      onClick={handleCepLookup}
-                      className="px-3 py-2 bg-[#FAF7F2] border border-stone-300 hover:bg-[#F3EDE3] text-[#2E2620] rounded-sm text-[11px]"
+                      disabled={isSearchingCep}
+                      onClick={() => handleCepLookup(cep)}
+                      className="px-3 py-2 bg-[#FAF7F2] border border-stone-300 hover:bg-[#F3EDE3] text-[#2E2620] rounded-sm text-[11px] shrink-0 font-mono"
                     >
-                      Buscar
+                      {isSearchingCep ? "Buscando..." : "Buscar"}
                     </button>
                   </div>
                 </div>

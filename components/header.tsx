@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export function Header() {
   const pathname = usePathname();
-  const { customer, isCustomerAuthenticated, logoutCustomer } = useAuth();
+  const { customer, admin, isCustomerAuthenticated, isAdminAuthenticated, logoutCustomer, logoutAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,8 +101,30 @@ export function Header() {
               <Search className="h-4 w-4" />
             </button>
 
-            {/* Login do Cliente */}
-            {isCustomerAuthenticated ? (
+            {/* Login do Cliente ou Painel do Dono */}
+            {isAdminAuthenticated ? (
+              <div className="flex items-center gap-1.5 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-sm">
+                <Link
+                  href="/admin/pedidos"
+                  className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider text-amber-900 font-bold hover:underline"
+                  title="Acessar Gestão Branch Clo"
+                >
+                  <User className="h-3.5 w-3.5 text-amber-800" />
+                  <span className="hidden md:inline">Painel do Dono</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logoutAdmin();
+                    toast.info("Sessão administrativa encerrada.");
+                  }}
+                  className="text-amber-800 hover:text-red-600 transition-colors p-0.5 ml-1"
+                  title="Sair do Painel"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : isCustomerAuthenticated ? (
               <div className="flex items-center gap-1.5 bg-[#EBF2EB] px-2.5 py-1 rounded-sm">
                 <Link
                   href="/login"
@@ -139,13 +161,6 @@ export function Header() {
               className="hidden md:inline-block text-xs font-mono uppercase tracking-widest font-medium text-[#2E2620] hover:text-[#1E3524] transition-colors"
             >
               RASTREIO
-            </Link>
-
-            <Link
-              href="/admin/pedidos"
-              className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest font-medium text-[#2E2620] hover:text-[#7E7265] transition-colors"
-            >
-              GESTÃO
             </Link>
 
             <Link
@@ -301,9 +316,36 @@ export function Header() {
                 </button>
               </div>
 
-              {/* Status da Conta do Cliente no Mobile */}
+              {/* Status da Conta do Usuário no Mobile */}
               <div className="py-3 border-b border-stone-200">
-                {isCustomerAuthenticated ? (
+                {isAdminAuthenticated ? (
+                  <div className="bg-amber-100 border border-amber-300 p-3 rounded-sm flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-mono text-amber-900 uppercase font-bold tracking-wider">
+                        Painel do Lojista
+                      </div>
+                      <Link
+                        href="/admin/pedidos"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-xs font-mono font-bold text-[#1E3524] underline block mt-0.5"
+                      >
+                        Acessar Gestão &bull; Pedidos
+                      </Link>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logoutAdmin();
+                        setMobileMenuOpen(false);
+                        toast.info("Sessão administrativa encerrada.");
+                      }}
+                      className="text-xs font-mono text-red-600 hover:underline flex items-center gap-1"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      Sair
+                    </button>
+                  </div>
+                ) : isCustomerAuthenticated ? (
                   <div className="bg-[#EBF2EB] p-3 rounded-sm flex items-center justify-between">
                     <div>
                       <div className="text-[10px] font-mono text-[#1E3524] uppercase font-bold tracking-wider">
