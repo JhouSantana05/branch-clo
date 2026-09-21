@@ -44,6 +44,9 @@ export function Footer() {
           <Link href="/#tabela" className="hover:text-[#1E3524] transition-colors font-semibold">
             Tabela de Preços
           </Link>
+          <Link href="/admin/pedidos" className="hover:text-[#1E3524] transition-colors opacity-70">
+            Painel Pedidos
+          </Link>
         </div>
       </div>
     </footer>

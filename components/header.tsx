@@ -5,10 +5,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, Search, Menu, X, ChevronRight } from "lucide-react";
+import { OFFICIAL_PRODUCTS } from "@/lib/catalog";
 
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const searchResults = searchQuery.trim()
+    ? OFFICIAL_PRODUCTS.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
 
   const navLinks = [
     { name: "MASCULINO", href: "/masculino", sub: "Linha Adulto R$ 129,90" },
@@ -79,6 +91,7 @@ export function Header() {
           {/* Lado Direito: Busca, Log in e Sacola */}
           <div className="flex items-center space-x-3 sm:space-x-6">
             <button
+              onClick={() => setSearchOpen(true)}
               aria-label="Buscar"
               className="text-[#2E2620] hover:text-[#7E7265] transition-colors p-1"
             >
@@ -86,25 +99,133 @@ export function Header() {
             </button>
 
             <Link
-              href="#"
+              href="/admin/pedidos"
               className="hidden sm:inline-block text-xs font-mono uppercase tracking-widest font-medium text-[#2E2620] hover:text-[#7E7265] transition-colors"
             >
-              LOG IN
+              GESTÃO
             </Link>
 
-            <button
+            <Link
+              href="/checkout"
               aria-label="Sacola de Compras"
               className="relative flex items-center text-[#2E2620] hover:text-[#7E7265] transition-colors p-1"
             >
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1E3524] text-[9px] font-bold text-white">
-                2
+                1
               </span>
-            </button>
+            </Link>
           </div>
 
         </div>
       </header>
+
+      {/* 2.1 MODAL DE BUSCA INTELIGENTE */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-[110] flex items-start justify-center pt-20 px-4">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => {
+              setSearchOpen(false);
+              setSearchQuery("");
+            }}
+          />
+
+          <div className="relative w-full max-w-2xl bg-[#FAF7F2] rounded-sm border border-stone-300 shadow-2xl overflow-hidden z-10 animate-in fade-in-0 zoom-in-95 duration-200">
+            {/* Input de Busca */}
+            <div className="flex items-center px-4 py-3.5 border-b border-stone-200 bg-white">
+              <Search className="h-5 w-5 text-stone-400 mr-3 shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por peça, versículo (João 15, Mateus 17...) ou linha..."
+                className="w-full text-sm font-mono text-[#2E2620] placeholder:text-stone-400 focus:outline-none bg-transparent"
+              />
+              <button
+                onClick={() => {
+                  setSearchOpen(false);
+                  setSearchQuery("");
+                }}
+                className="p-1 text-stone-400 hover:text-stone-700 ml-2"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Sugestões ou Resultados */}
+            <div className="p-4 max-h-[60vh] overflow-y-auto">
+              {searchQuery.trim() === "" ? (
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-[#8C7A68] mb-3">
+                    SUGESTÕES DE BUSCA:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {["The Vine", "Mustard Seed", "Juízes 7", "Salmo 23", "Linha Adulto", "Linha Kids"].map(
+                      (term) => (
+                        <button
+                          key={term}
+                          onClick={() => setSearchQuery(term)}
+                          className="px-3 py-1.5 rounded-sm border border-stone-200 bg-[#F5EFE6] text-xs font-mono text-[#2E2620] hover:border-stone-400 transition-colors"
+                        >
+                          {term}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-[#8C7A68] mb-2">
+                    {searchResults.length} {searchResults.length === 1 ? "PEÇA ENCONTRADA" : "PEÇAS ENCONTRADAS"}
+                  </div>
+                  {searchResults.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/produtos/${product.slug}`}
+                      onClick={() => {
+                        setSearchOpen(false);
+                        setSearchQuery("");
+                      }}
+                      className="flex items-center gap-4 p-2.5 rounded-sm hover:bg-[#F5EFE6] transition-colors border border-transparent hover:border-stone-200"
+                    >
+                      <div className="relative h-14 w-12 rounded-sm overflow-hidden bg-[#F3EDE3] shrink-0 border border-stone-200">
+                        <Image
+                          src={product.images[0]?.url || "/catalog/tee-oversized-offwhite-frente.jpeg"}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-[#8C7A68]">
+                          {product.categoryName}
+                        </span>
+                        <h4 className="text-xs font-bold font-mono text-[#2E2620] uppercase truncate">
+                          {product.name}
+                        </h4>
+                        <p className="text-[11px] text-[#7E7265] truncate font-light">
+                          {product.description}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-bold font-mono text-[#1E3524]">
+                          R$ {product.variants[0]?.regularPrice.toFixed(2).replace(".", ",")}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-xs font-mono text-[#7E7265]">
+                  Nenhuma peça encontrada para &ldquo;{searchQuery}&rdquo;. Tente buscar por *The Vine*, *João 15* ou *Kids*.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. MENU MOBILE DRAWER (Gaveta Lateral Suave) */}
       {mobileMenuOpen && (

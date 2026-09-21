@@ -274,11 +274,23 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               </div>
 
               {/* Botões de Ação */}
-              <div className="mt-8 space-y-3">
+              <div className="mt-8 space-y-2.5">
+                {/* Comprar Agora Direto no Checkout */}
+                <Link
+                  href={`/checkout?slug=${product.slug}&color=${encodeURIComponent(
+                    selectedColor
+                  )}&size=${encodeURIComponent(activeVariant?.size || "M")}`}
+                  className="w-full h-12 bg-[#1E3524] hover:bg-[#142418] text-white font-mono uppercase tracking-widest text-xs font-bold rounded-sm gap-2 shadow-md flex items-center justify-center transition-all duration-200"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Comprar Agora (5% OFF no PIX)
+                </Link>
+
                 {/* Adicionar à Sacola */}
                 <Button
                   onClick={handleAddToCart}
-                  className="w-full h-12 bg-[#2E2620] hover:bg-[#1C1713] text-[#FAF7F2] font-mono uppercase tracking-widest text-xs font-semibold rounded-sm gap-2 shadow-sm"
+                  variant="outline"
+                  className="w-full h-11 bg-[#FAF7F2] hover:bg-[#F3EDE3] border-stone-300 text-[#2E2620] font-mono uppercase tracking-widest text-xs font-semibold rounded-sm gap-2 shadow-xs"
                 >
                   <ShoppingBag className="h-4 w-4" />
                   Adicionar à Sacola
@@ -287,11 +299,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 {/* Comprar via WhatsApp */}
                 <Button
                   onClick={handleWhatsAppBuy}
-                  variant="outline"
-                  className="w-full h-12 border-[#1E3524] text-[#1E3524] hover:bg-[#1E3524] hover:text-white font-mono uppercase tracking-widest text-xs font-semibold rounded-sm gap-2 transition-colors shadow-xs"
+                  variant="ghost"
+                  className="w-full h-10 text-[#1E3524] hover:bg-[#EBF2EB] font-mono uppercase tracking-widest text-xs font-semibold rounded-sm gap-2 transition-colors"
                 >
                   <MessageCircle className="h-4 w-4 text-[#25D366]" />
-                  Comprar pelo WhatsApp
+                  Tirar Dúvidas / Pedir via WhatsApp
                 </Button>
               </div>
 
