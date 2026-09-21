@@ -254,8 +254,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                       <span>Provador Virtual</span>
                     </button>
                   </div>
-                  <span className="text-[11px] font-mono text-[#586E53]">
-                    ● {activeVariant?.stockAvailable || 0} unidades em estoque
+                  <span className={`text-[11px] font-mono font-medium ${activeVariant && activeVariant.stockAvailable > 0 ? "text-[#586E53]" : "text-stone-400"}`}>
+                    ● {activeVariant && activeVariant.stockAvailable > 0 ? "Disponível para envio imediato" : "Indisponível neste tamanho"}
                   </span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -268,18 +268,15 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                         key={variant.id}
                         disabled={isOutOfStock}
                         onClick={() => setSelectedVariantId(variant.id)}
-                        className={`flex flex-col items-center justify-center py-3 rounded-sm border text-xs font-mono transition-all ${
+                        className={`flex items-center justify-center py-3.5 rounded-sm border text-sm font-mono font-bold transition-all ${
                           isSelected
-                            ? "border-[#1E3524] bg-[#1E3524] text-white font-bold shadow-sm"
+                            ? "border-[#1E3524] bg-[#1E3524] text-white shadow-sm"
                             : isOutOfStock
                             ? "border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed line-through"
                             : "border-stone-300 bg-[#FDFCF9] hover:border-stone-500 text-[#2E2620]"
                         }`}
                       >
-                        <span className="text-sm font-bold">{variant.size}</span>
-                        <span className={`text-[10px] ${isSelected ? "text-stone-300" : "text-[#7E7265]"}`}>
-                          {variant.stockAvailable}un
-                        </span>
+                        <span>{variant.size}</span>
                       </button>
                     );
                   })}

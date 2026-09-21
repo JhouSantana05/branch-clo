@@ -224,8 +224,8 @@ export function ProductCard({ product }: { product: ProductData }) {
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#7E7265]">
               Grade Disponível:
             </span>
-            <span className="text-[10px] font-mono text-[#586E53]">
-              ● {activeVariant?.stockAvailable || 0} unidades
+            <span className={`text-[10px] font-mono ${activeVariant && activeVariant.stockAvailable > 0 ? "text-[#586E53]" : "text-stone-400"}`}>
+              ● {activeVariant && activeVariant.stockAvailable > 0 ? "Disponível" : "Indisponível"}
             </span>
           </div>
 
@@ -239,18 +239,15 @@ export function ProductCard({ product }: { product: ProductData }) {
                   key={variant.id}
                   disabled={isOutOfStock}
                   onClick={() => setSelectedVariantId(variant.id)}
-                  className={`flex flex-col items-center justify-center py-2 rounded-sm border text-xs font-mono transition-all ${
+                  className={`flex items-center justify-center py-2.5 rounded-sm border text-xs font-mono font-bold transition-all ${
                     isSelected
-                      ? "border-[#382B22] bg-[#382B22] text-[#FAF7F2] font-semibold shadow-xs"
+                      ? "border-[#382B22] bg-[#382B22] text-[#FAF7F2] shadow-xs"
                       : isOutOfStock
                       ? "border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed line-through"
                       : "border-stone-200 bg-[#FAF7F2] hover:border-stone-400 text-[#2E2620]"
                   }`}
                 >
                   <span>{variant.size}</span>
-                  <span className={`text-[9px] ${isSelected ? "text-[#E5DDD0]" : "text-[#7E7265]"}`}>
-                    {variant.stockAvailable}un
-                  </span>
                 </button>
               );
             })}
